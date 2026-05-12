@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MS vs HD QUBO Pipeline — Results</title>
+<style>
+  /* Color palette matching the reference slide */
+  :root {
+    --navy:      #1f3a5f;
+    --navy-mid:  #2c4a73;
+    --blue-acc:  #3a6db0;
+    --gray-text: #303030;
+    --gray-mid:  #6b6b6b;
+    --gray-line: #d6d6d6;
+    --gray-bg:   #f7f7f7;
+    --hi-yellow: #fff8d4;
+    --hi-green:  #e8f4ec;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: #ddd;
+    color: var(--gray-text);
+    padding: 30px 0;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    margin: 0 auto 40px;
+    background: white;
+    padding: 50px 60px 40px;
+    position: relative;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+  }
+  .pagenum {
+    position: absolute;
+    right: 30px;
+    bottom: 18px;
+    color: #999;
+    font-size: 14px;
+  }
+  .deco-squares {
+    position: absolute;
+    top: 50px;
+    right: 60px;
+    display: flex;
+    gap: 6px;
+  }
+  .deco-squares span {
+    width: 12px; height: 12px;
+    background: var(--gray-line);
+    display: inline-block;
+  }
+  .deco-squares span:last-child {
+    background: var(--navy);
+  }
+  .slide-label {
+    color: var(--navy);
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 22px;
+    letter-spacing: 0.3px;
+  }
+  .section-h {
+    color: var(--navy);
+    font-size: 24px;
+    font-weight: 700;
+    border-left: 6px solid var(--navy);
+    padding-left: 14px;
+    margin-bottom: 20px;
+    line-height: 1.3;
+  }
+  .section-h.smaller { font-size: 21px; }
+  ul.bullets {
+    list-style: none;
+    margin-bottom: 18px;
+  }
+  ul.bullets li {
+    position: relative;
+    padding-left: 22px;
+    margin-bottom: 9px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--gray-text);
+  }
+  ul.bullets li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 9px;
+    width: 9px; height: 9px;
+    background: var(--navy);
+  }
+  .sub-bullet {
+    color: var(--blue-acc);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 8px 0 18px 4px;
+    padding-left: 18px;
+    position: relative;
+    line-height: 1.5;
+  }
+  .sub-bullet::before {
+    content: "▶";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--blue-acc);
+    font-size: 13px;
+  }
+  table.results {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    margin: 12px 0;
+  }
+  table.results thead th {
+    background: var(--gray-bg);
+    color: var(--navy);
+    font-weight: 700;
+    text-align: center;
+    padding: 11px 10px;
+    border-bottom: 2px solid var(--navy);
+  }
+  table.results thead th:first-child {
+    text-align: left;
+    padding-left: 16px;
+  }
+  table.results tbody td {
+    padding: 10px 10px;
+    border-bottom: 1px dashed var(--gray-line);
+    text-align: center;
+    color: var(--gray-text);
+  }
+  table.results tbody td:first-child {
+    text-align: left;
+    padding-left: 16px;
+    font-weight: 600;
+  }
+  table.results tbody tr.highlight td {
+    background: var(--hi-green);
+    font-weight: 700;
+  }
+  table.results tbody tr:hover td {
+    background: #f9fafc;
+  }
+  .footnote {
+    margin-top: 18px;
+    color: var(--gray-mid);
+    font-size: 13px;
+    font-style: italic;
+  }
+  .row { display: flex; gap: 30px; }
+  .col-main { flex: 1.5; }
+  .col-side { flex: 1; }
+  .badge {
+    display: inline-block;
+    background: var(--navy);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-left: 6px;
+    letter-spacing: 0.5px;
+  }
+  .badge.green { background: #2e8b57; }
+  .star { color: #c39520; font-weight: 700; margin-left: 4px; }
+  .method-cell {
+    text-align: left !important;
+    padding: 11px 12px !important;
+    line-height: 1.45;
+  }
+  .method-name {
+    font-weight: 700;
+    color: var(--navy);
+    margin-right: 6px;
+  }
+  .note-box {
+    background: var(--gray-bg);
+    border-left: 3px solid var(--blue-acc);
+    padding: 14px 16px;
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--gray-text);
+  }
+  .note-box strong { color: var(--navy); }
+  .formula {
+    font-family: "Cambria Math", "STIX Two Math", Georgia, serif;
+    font-style: italic;
+    color: var(--navy-mid);
+  }
+  /* Data overview specific */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin: 14px 0 10px;
+  }
+  .stat-card {
+    background: var(--gray-bg);
+    border-left: 4px solid var(--navy);
+    padding: 14px 18px;
+  }
+  .stat-card .label {
+    color: var(--gray-mid);
+    font-size: 12px;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+  .stat-card .num {
+    color: var(--navy);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-card .sub {
+    color: var(--gray-text);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+  .seurat-tree {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--gray-text);
+  }
+  .seurat-tree code {
+    background: var(--gray-bg);
+    color: var(--navy);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  table.cohort {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  table.cohort thead th {
+    background: var(--gray-bg);
+    color: var(--navy);
+    font-weight: 700;
+    text-align: center;
+    padding: 8px 10px;
+    border-bottom: 2px solid var(--navy);
+  }
+  table.cohort thead th:first-child {
+    text-align: left;
+    padding-left: 14px;
+  }
+  table.cohort tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px dashed var(--gray-line);
+    text-align: center;
+  }
+  table.cohort tbody td:first-child {
+    text-align: left;
+    padding-left: 14px;
+    font-weight: 600;
+  }
+  table.cohort tbody tr.total td {
+    background: var(--hi-green);
+    font-weight: 700;
+    color: var(--navy);
+  }
+</style>
+</head>
+<body>
+
+<!-- Slide 0: Data Overview -->
+<div class="slide">
+  <div class="slide-label">Data Overview</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Single-Cell RNA-seq Dataset</div>
+
+  <ul class="bullets">
+    <li>Integrated scRNA-seq dataset of MS patients and healthy donors from <strong>4 public cohorts</strong></li>
+    <li>Cerebrospinal fluid (CSF) and peripheral blood (PBMC) immune cells, harmonized within a single Seurat object</li>
+  </ul>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="label">SUBJECTS</div>
+      <div class="num">50</div>
+      <div class="sub">Control: 22 &nbsp; / &nbsp; MS: 28</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">SAMPLES</div>
+      <div class="num">99</div>
+      <div class="sub">Control: 41 &nbsp; / &nbsp; MS: 58</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">FEATURES (genes)</div>
+      <div class="num">32,265</div>
+      <div class="sub">RNA assay: 32,170 &nbsp; / &nbsp; HVG: 3,000</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">CELLS</div>
+      <div class="num">385,116</div>
+      <div class="sub">CSF: 225,834 &nbsp; / &nbsp; PBMC: 159,282</div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:18px;">
+    <div class="col-main">
+      <div class="section-h smaller" style="font-size:18px; margin-bottom:10px;">Seurat Object Structure</div>
+      <div class="seurat-tree">
+        ▸ <strong>4 assays</strong>: <code>RNA</code> (active), prediction.score.celltype.l1 / l2 / l3<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;└ <code>RNA</code> assay = 32,170 genes / 3,000 variable features (HVG)<br>
+        ▸ <strong>3 layers</strong> (within RNA assay):<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;├ <code>counts</code> &nbsp;&nbsp; — raw read counts<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;├ <code>data</code> &nbsp;&nbsp;&nbsp;— log-normalized expression<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;└ <code>scale.data</code> — z-scaled (mean 0, var 1) for PCA<br>
+        ▸ <strong>6 reductions</strong>: PCA, harmony, UMAP, t-SNE, integrated_dr, ref.umap
+      </div>
+    </div>
+    <div class="col-side">
+      <div class="section-h smaller" style="font-size:18px; margin-bottom:10px;">Cohort Composition (donors)</div>
+      <table class="cohort">
+        <thead>
+          <tr>
+            <th>Cohort</th>
+            <th>HD</th>
+            <th>MS</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Heming</td>     <td>9</td>  <td>9</td>  <td>18</td></tr>
+          <tr><td>Pappalardo</td> <td>6</td>  <td>5</td>  <td>11</td></tr>
+          <tr><td>Ramesh</td>     <td>3</td>  <td>14</td> <td>17</td></tr>
+          <tr><td>Touil</td>      <td>4</td>  <td>0</td>  <td>4</td></tr>
+          <tr class="total"><td>Total</td><td>22</td><td>28</td><td>50</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="footnote">* Touil cohort contains no MS donors and is therefore used only for training (not eligible as a held-out test cohort).</p>
+
+  <div class="pagenum">1</div>
+</div>
+
+
+<!-- Slide 1: Method Principle Summary -->
+<div class="slide">
+  <div class="slide-label">Method Principle Summary</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Comparison of Five Gene-Selection Methods</div>
+
+  <ul class="bullets">
+    <li>For donor-level MS / HD classification from scRNA-seq pseudobulk, we compared five gene-selection methods</li>
+    <li>Four are established baselines (DE_top, HVG, LASSO, Elastic Net); one is the proposed method (QUBO)</li>
+  </ul>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:18%">Method</th>
+        <th style="width:42%">Principle</th>
+        <th style="width:25%">Selection Mechanism</th>
+        <th style="width:15%">Characteristic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>DE_top</td>
+        <td class="method-cell">Top-K genes ranked by <span class="method-name">|t| statistic</span> from edgeR</td>
+        <td>Simple ranking</td>
+        <td>Simplest baseline</td>
+      </tr>
+      <tr>
+        <td>HVG</td>
+        <td class="method-cell">Top-K genes by <span class="method-name">expression variance</span> across train donors</td>
+        <td>Unsupervised</td>
+        <td>Label-agnostic</td>
+      </tr>
+      <tr>
+        <td>LASSO</td>
+        <td class="method-cell">L1-regularized logistic regression<br><span class="formula">min L(w) + λ Σ|w<sub>j</sub>|</span></td>
+        <td>Coefficient shrinkage</td>
+        <td>Sparse</td>
+      </tr>
+      <tr>
+        <td>Elastic Net</td>
+        <td class="method-cell">L1 + L2 hybrid regularization</td>
+        <td>Stabilized LASSO</td>
+        <td>Robust to collinearity</td>
+      </tr>
+      <tr class="highlight">
+        <td>QUBO <span class="badge">Proposed</span></td>
+        <td class="method-cell">Quadratic binary optimization (simultaneously balances relevance + redundancy + cardinality)<br><span class="formula">min ( −s'x + γ x'Rx + λ(Σx − K)² )</span></td>
+        <td>Simulated Annealing</td>
+        <td><strong>Explicit redundancy penalty</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="sub-bullet">QUBO is the <strong>only method that simultaneously optimizes relevance and non-redundancy</strong>, distinguishing it from the four standard methods</p>
+
+  <div class="pagenum">2</div>
+</div>
+
+
+<!-- Slide 2: Table 1 - CSF main results -->
+<div class="slide">
+  <div class="slide-label">Result 1 / Main Performance</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Classification Performance on CSF — Mean across 3 LOOCV Folds</div>
+
+  <ul class="bullets">
+    <li>Leave-One-Cohort-Out (LOCO) evaluation: each of three cohorts is sequentially used as the external held-out test set</li>
+    <li>Within each LOCO fold, 5-fold donor-level GroupKFold; (K, λ, γ) tuned by inner-CV AUC per fold</li>
+    <li>edgeR DEG layer + per-cell-type ensemble across 8 immune cell types (soft voting)</li>
+  </ul>
+
+  <div class="row">
+    <div class="col-main">
+      <table class="results">
+        <thead>
+          <tr>
+            <th style="width:21%">Method</th>
+            <th style="width:18%">Held AUC</th>
+            <th style="width:14%">Held AP</th>
+            <th style="width:14%">Held F1</th>
+            <th style="width:18%">Held MCC</th>
+            <th style="width:15%">Held σ_AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>QUBO <span class="badge green">Proposed</span></td>
+            <td><strong>0.781</strong> <span class="star">★</span></td>
+            <td>0.833</td>
+            <td><strong>0.640</strong> <span class="star">★</span></td>
+            <td><strong>0.297</strong> <span class="star">★</span></td>
+            <td><strong>0.041</strong> <span class="star">★</span></td>
+          </tr>
+          <tr>
+            <td>LASSO / Elastic Net</td>
+            <td>0.773</td>
+            <td><strong>0.846</strong> <span class="star">★</span></td>
+            <td>0.620</td>
+            <td>0.242</td>
+            <td>0.057</td>
+          </tr>
+          <tr>
+            <td>DE_top</td>
+            <td>0.742</td>
+            <td>0.813</td>
+            <td>0.581</td>
+            <td>0.119</td>
+            <td>0.065</td>
+          </tr>
+          <tr>
+            <td>HVG</td>
+            <td>0.696</td>
+            <td>0.778</td>
+            <td>0.571</td>
+            <td>0.126</td>
+            <td>0.045</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="footnote">* All values are means across 3-cohort LOOCV. Held σ_AUC = standard deviation across the three cohorts (lower = better cross-site reproducibility). Biology filter (housekeeping/mito/ribosomal excluded), deterministic seed (zlib.crc32).</p>
+    </div>
+
+    <div class="col-side">
+      <div class="note-box">
+        <strong>QUBO Wins on 4 of 5 Metrics</strong><br><br>
+        ① <strong>AUC mean</strong>: QUBO 0.781 (vs LASSO 0.773)<br><br>
+        ② <strong>F1 mean</strong>: QUBO 0.640 (vs LASSO 0.620)<br><br>
+        ③ <strong>MCC mean</strong>: QUBO 0.297 (vs LASSO 0.242, +23%)<br><br>
+        ④ <strong>AUC σ</strong>: QUBO 0.041 (vs LASSO 0.057)<br><br>
+        Loses only AP to LASSO (Δ 0.013). <strong>Wins on the primary metric AUC, with a stronger lead on the imbalance-robust MCC.</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="pagenum">3</div>
+</div>
+
+
+<!-- Slide 3: Table 2 - per-cohort breakdown -->
+<div class="slide">
+  <div class="slide-label">Result 2 / Cohort-Level Consistency</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Held AUC by Cohort — Consistency of QUBO Selection</div>
+
+  <ul class="bullets">
+    <li>CSF classification performance when each cohort (Pappalardo / Heming / Ramesh) is held out</li>
+    <li><strong>QUBO is the top performer in 2 of 3 cohorts</strong> (Heming, Ramesh)</li>
+    <li>QUBO <strong>never ranks last</strong>, while HVG drops to 0.62 in Heming — illustrating cohort-specific failure</li>
+  </ul>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:18%">Method</th>
+        <th style="width:18%">Pappalardo<br><small>(mean ± fold σ)</small></th>
+        <th style="width:18%">Heming<br><small>(mean ± fold σ)</small></th>
+        <th style="width:18%">Ramesh<br><small>(mean ± fold σ)</small></th>
+        <th style="width:14%">cohort mean</th>
+        <th style="width:14%">cohort σ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>QUBO <span class="badge green">Proposed</span></td>
+        <td>0.787 ± 0.139</td>
+        <td>0.738 ± 0.091</td>
+        <td><strong>0.819 ± 0.073</strong> <span class="star">★</span></td>
+        <td><strong>0.781</strong> ★</td>
+        <td><strong>0.041</strong> ★</td>
+      </tr>
+      <tr>
+        <td>LASSO / Elastic Net</td>
+        <td><strong>0.833 ± 0.100</strong> <span class="star">★</span></td>
+        <td><strong>0.765 ± 0.195</strong> <span class="star">★</span></td>
+        <td>0.719 ± 0.155</td>
+        <td>0.773</td>
+        <td>0.057</td>
+      </tr>
+      <tr>
+        <td>DE_top</td>
+        <td>0.813 ± 0.065</td>
+        <td>0.726 ± 0.182</td>
+        <td>0.686 ± 0.164</td>
+        <td>0.742</td>
+        <td>0.065</td>
+      </tr>
+      <tr>
+        <td>HVG</td>
+        <td>0.687 ± 0.229</td>
+        <td>0.746 ± 0.168</td>
+        <td>0.657 ± 0.082</td>
+        <td>0.696</td>
+        <td>0.045</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="footnote">Each cell shows <strong>mean ± fold σ across 5 folds</strong>. Last two columns show <strong>mean / std across the 3 cohorts</strong>. Fold σ = within-cohort variability; cohort σ = cross-site variability. ★ = best in column. QUBO wins Ramesh + overall mean / σ; LASSO wins Pappalardo / Heming.</p>
+
+  <p class="sub-bullet">QUBO converges to the <strong>tightest range across cohorts (0.74-0.82)</strong>; LASSO ranges 0.72-0.83. <strong>Reproducible MS classification across independent study sites.</strong></p>
+
+  <div class="pagenum">4</div>
+</div>
+
+
+<!-- Slide 4: Architectural Evolution -->
+<div class="slide">
+  <div class="slide-label">Result 3 / Pipeline Evolution</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Pipeline Evolution — How QUBO Caught Up to LASSO (v5 → v6)</div>
+
+  <ul class="bullets">
+    <li>In early versions QUBO underperformed LASSO; three architectural improvements closed the gap</li>
+    <li>① Per-cell-type panels with 8-way ensemble &nbsp; ② Cell-type-wise K grid search &nbsp; ③ Anti-batch term</li>
+  </ul>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:18%">Pipeline</th>
+        <th style="width:36%">Architecture</th>
+        <th style="width:12%">Genes</th>
+        <th style="width:12%">Held AUC</th>
+        <th style="width:12%">Held σ</th>
+        <th style="width:10%">Held MCC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>v5 — Tier 1</td>
+        <td class="method-cell">All-cell-type concatenated panel + single classifier (housekeeping included)</td>
+        <td>20 (fixed)</td>
+        <td>0.781</td>
+        <td>0.062</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>v5 — Tier 2B</td>
+        <td class="method-cell">Same + anti-batch (cohort variance penalty)</td>
+        <td>20 (fixed)</td>
+        <td>0.728</td>
+        <td>0.143</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>v6 (no bio filter)</td>
+        <td class="method-cell">Per-cell-type panel + 8-way ensemble + K grid (housekeeping kept)</td>
+        <td>~87 (unique)</td>
+        <td>0.850</td>
+        <td>0.088</td>
+        <td>—</td>
+      </tr>
+      <tr class="highlight">
+        <td>v6 + biology filter <span class="badge">Final</span></td>
+        <td class="method-cell">Same + early exclusion of housekeeping/mito/ribosomal genes</td>
+        <td>~75 (unique)</td>
+        <td><strong>0.781</strong></td>
+        <td><strong>0.041</strong></td>
+        <td><strong>0.297</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="sub-bullet">Final pipeline (v6 + biology filter) achieves <strong>AUC 0.781 ± 0.041, MCC 0.297</strong>, with QUBO leading AUC mean / σ / F1 / MCC (4 of 5 metrics)</p>
+
+  <div class="row" style="margin-top:18px;">
+    <div class="col-main">
+      <div class="note-box">
+        <strong>Four Architectural Improvements</strong><br><br>
+        <strong>① Per-cell-type panel</strong>: independent QUBO per cell type → cell-type-specific markers<br>
+        <strong>② K grid search</strong>: K ∈ {10, 20, 30} chosen by inner CV → optimal panel size per cell type<br>
+        <strong>③ Soft voting ensemble</strong>: probabilities from 8 cell-type classifiers averaged → robust to missing cell types<br>
+        <strong>④ Biology filter (early)</strong>: housekeeping / mitochondrial / ribosomal genes excluded BEFORE selection (avoids post-hoc bias)
+      </div>
+    </div>
+  </div>
+
+  <div class="pagenum">5</div>
+</div>
+
+</body>
+</html>

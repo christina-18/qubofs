@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>QUBO 解説スライド</title>
+<style>
+  :root {
+    --navy:      #1f3a5f;
+    --navy-mid:  #2c4a73;
+    --blue-acc:  #3a6db0;
+    --gray-text: #303030;
+    --gray-mid:  #6b6b6b;
+    --gray-line: #d6d6d6;
+    --gray-bg:   #f7f7f7;
+    --hi-yellow: #fff8d4;
+    --hi-green:  #e8f4ec;
+    --term-red:  #c0392b;
+    --term-orange: #d97a26;
+    --term-blue: #2874a6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP",
+                  -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #ddd;
+    color: var(--gray-text);
+    padding: 30px 0;
+  }
+  .slide {
+    width: 1280px;
+    height: 720px;
+    margin: 0 auto 40px;
+    background: white;
+    padding: 32px 50px 28px;
+    position: relative;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .pagenum { position: absolute; right: 30px; bottom: 14px; color: #999; font-size: 13px; }
+  .deco-squares {
+    position: absolute; top: 32px; right: 50px;
+    display: flex; gap: 6px;
+  }
+  .deco-squares span {
+    width: 11px; height: 11px;
+    background: var(--gray-line);
+    display: inline-block;
+  }
+  .deco-squares span:last-child { background: var(--navy); }
+  .slide-label {
+    color: var(--navy);
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .section-h {
+    color: var(--navy);
+    font-size: 18px;
+    font-weight: 700;
+    border-left: 5px solid var(--navy);
+    padding-left: 12px;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  /* 3-column layout for analogy / formula / algorithm */
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 6px;
+  }
+  .panel {
+    background: var(--gray-bg);
+    border-left: 4px solid var(--navy);
+    padding: 10px 14px 12px;
+    border-radius: 2px;
+  }
+  .panel.green { border-left-color: #2e8b57; background: #f0f7f3; }
+  .panel.blue { border-left-color: var(--blue-acc); background: #f0f4fa; }
+  .panel-title {
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 5px;
+  }
+  .panel ul { list-style: none; padding-left: 0; }
+  .panel ul li {
+    position: relative;
+    padding-left: 14px;
+    margin-bottom: 3px;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+  .panel ul li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: var(--blue-acc);
+    font-weight: bold;
+  }
+  /* Formula display */
+  .formula-block {
+    background: linear-gradient(to bottom, white 0%, #fafafa 100%);
+    border: 1px solid var(--gray-line);
+    border-top: 3px solid var(--navy);
+    padding: 10px 16px 12px;
+    margin: 4px 0 10px;
+  }
+  .formula-display {
+    font-family: "STIX Two Math", "Cambria Math", Georgia, serif;
+    font-size: 22px;
+    text-align: center;
+    color: var(--navy);
+    margin: 2px 0 10px;
+    font-style: italic;
+    letter-spacing: 1px;
+  }
+  .term { font-weight: bold; padding: 0 2px; }
+  .term-rel { color: var(--term-red); }
+  .term-red-bg { background: #fbe7e3; padding: 2px 5px; border-radius: 3px; }
+  .term-orange { color: var(--term-orange); }
+  .term-orange-bg { background: #fde9d4; padding: 2px 5px; border-radius: 3px; }
+  .term-blue { color: var(--term-blue); }
+  .term-blue-bg { background: #d6e7f3; padding: 2px 5px; border-radius: 3px; }
+  .term-row {
+    display: grid;
+    grid-template-columns: 32% 1fr;
+    gap: 10px;
+    align-items: start;
+    margin-bottom: 4px;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  .term-row .term-name { font-weight: 600; padding: 1px 6px; border-radius: 3px; text-align: center; font-size: 12.5px; }
+  /* Algorithm illustration */
+  .algo-illust {
+    background: #fafafa;
+    border: 1px solid var(--gray-line);
+    padding: 7px 10px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    color: #444;
+  }
+  .algo-illust .kw { color: var(--navy); font-weight: 600; }
+  .algo-illust .cmt { color: #888; font-style: italic; }
+  /* Title sub */
+  .sub-bullet {
+    color: var(--blue-acc);
+    font-size: 14px;
+    font-weight: 600;
+    margin: 4px 0 6px 4px;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.35;
+  }
+  .sub-bullet::before {
+    content: "▶";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--blue-acc);
+    font-size: 11px;
+  }
+  /* footnote */
+  .footnote {
+    color: var(--gray-mid);
+    font-size: 11px;
+    font-style: italic;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="slide">
+  <div class="slide-label">QUBO 遺伝子選択の仕組み</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h" style="font-size:20px;">「ちょうど良い K=20 個」を組合せ最適化で選ぶ</div>
+
+  <p class="sub-bullet">単純な順位ソート (DE_top) でも LASSO でもなく、<strong>「効く × 似てない × ちょうど20個」を同時最適化</strong>するのが QUBO</p>
+
+  <!-- 数式パネル (大きく見せる) -->
+  <div class="formula-block">
+    <div class="formula-display">
+      H(x) = <span class="term term-red">−s<sup>⊤</sup>x</span>
+            + <span class="term term-orange">γ · x<sup>⊤</sup>R x</span>
+            + <span class="term term-blue">λ (1<sup>⊤</sup>x − K)<sup>2</sup></span>
+    </div>
+
+    <div class="term-row">
+      <div class="term-name term-red-bg term-red">① relevance を最大化</div>
+      <div>各遺伝子の「効きそう度」 <em>s<sub>i</sub></em> (= |t-stat|² など) を <strong>選んだ遺伝子で総和</strong>。「MS と HD で発現が違う遺伝子」が選ばれやすくなる</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name term-orange-bg term-orange">② redundancy を最小化</div>
+      <div>遺伝子ペアの相関 <em>R<sub>ij</sub></em> = |corr| を <strong>選んだペアでペナルティ加算</strong>。互いに似た遺伝子を避ける (= 多様性確保)</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name term-blue-bg term-blue">③ ちょうど K 個</div>
+      <div><em>(Σx<sub>i</sub> − K)²</em> がゼロになるよう罰則。K=20 を超えても足りなくても「コスト」がかかる</div>
+    </div>
+    <p class="footnote">x ∈ {0,1}<sup>n</sup>: 各遺伝子を選ぶ(1)/選ばない(0) の二値変数。s, R は train donor のみから推定。 H(x) を最小化する組合せ x* が「最良の K 遺伝子集合」となる。</p>
+  </div>
+
+  <!-- 2列: アルゴリズム + 利点 -->
+  <div class="three-col">
+    <div class="panel green">
+      <div class="panel-title">解き方: Simulated Annealing</div>
+      <div class="algo-illust">
+<span class="kw">x</span> = ランダムな初期解 (K個 1)<br>
+<span class="kw">T</span> = T_start (高温; 探索広い)<br>
+<span class="kw">while</span> T > T_end:<br>
+&nbsp;&nbsp;&nbsp;<span class="kw">for</span> i in 全遺伝子:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ΔH = H 変化量 (i を flip した時)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> exp(−ΔH/T) > rand():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;flip x[i] <span class="cmt"># 受理</span><br>
+&nbsp;&nbsp;&nbsp;T *= 0.99 <span class="cmt"># 冷却</span><br>
+<span class="cmt"># T 高い時: 山も下る (探索)</span><br>
+<span class="cmt"># T 低い時: 良い方向のみ (収束)</span>
+      </div>
+      <p style="font-size:13px; line-height:1.5; margin-top:6px;">
+      高温では悪い方向にも一定確率で動き、局所最適から脱出。冷却で徐々に最良解へ収束。
+      </p>
+    </div>
+
+    <div class="panel blue">
+      <div class="panel-title">QUBO の利点</div>
+      <ul>
+        <li><strong>冗長性を明示制御</strong>: 単純ソート (DE_top) では同じ pathway の遺伝子ばかり選ばれがち。QUBO は多様な遺伝子を確保</li>
+        <li><strong>cardinality 制約が直接書ける</strong>: 「ちょうど 20 個」が損失関数に組み込み可能 (LASSO は λ チューニングで間接的にしか制御できない)</li>
+        <li><strong>relevance と redundancy のバランスを γ, λ で調整可能</strong>: cell type ごと最適化できる</li>
+        <li><strong>量子アニーラ (D-Wave) 互換</strong>: 二値最適化で書けば量子計算機にそのまま実装可能。現在は古典 SA でも十分高速 (~3 秒/instance)</li>
+        <li><strong>本研究で実証</strong>: AUC 0.781 ± 0.041 で他 4 手法を上回った (主指標 AUC、補助指標 MCC, F1 で勝)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="pagenum">QUBO</div>
+</div>
+
+</body>
+</html>

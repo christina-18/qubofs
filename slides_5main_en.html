@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QUBO MS Classification — 5 main slides (English)</title>
+<style>
+  :root {
+    --navy:#4F4F70; --navy-mid:#6868a0; --blue-acc:#3a6db0;
+    --gray-text:#303030; --gray-mid:#6b6b6b; --gray-line:#d6d6d6;
+    --gray-bg:#f7f7f7; --hi-yellow:#fff8d4; --hi-green:#e8f4ec;
+    --burgundy:#8b3a3a; --burgundy-mid:#6b2828; --hi-burgundy:#f7eaea;
+    --warn-red:#c0392b; --hi-blue:#e3f0fb;
+    --term-red:#c0392b; --term-purple:#6d5b9c; --term-blue:#2874a6;
+    --term-purple-bg:#ede8f5;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1280px;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans CJK JP",
+                -apple-system,BlinkMacSystemFont,sans-serif;
+    background:#ddd;color:var(--gray-text);
+  }
+  .slide{
+    width:1280px;height:720px;margin:0 auto;
+    background:white;padding:32px 50px 24px;
+    position:relative;box-shadow:0 4px 18px rgba(0,0,0,0.12);
+    page-break-after:always;break-after:page;overflow:hidden;
+  }
+  .slide:last-child{page-break-after:auto;}
+  .pagenum{position:absolute;right:30px;bottom:12px;color:#999;font-size:12px;}
+  .deco-squares{position:absolute;top:32px;right:50px;display:flex;gap:5px;}
+  .deco-squares span{width:10px;height:10px;background:var(--gray-line);display:inline-block;}
+  .deco-squares span:last-child{background:var(--navy);}
+  .slide-label{color:var(--navy);font-size:24px;font-weight:700;margin-bottom:10px;letter-spacing:0.3px;}
+  .section-h{
+    color:var(--navy);font-size:19px;font-weight:700;
+    border-left:5px solid var(--navy);padding-left:12px;
+    margin-bottom:8px;line-height:1.25;
+  }
+  .section-h.smaller{font-size:15.5px;border-left-width:4px;}
+
+  /* === Slide 1: Title + Intro + Background (compact) === */
+  .title-block{
+    padding-bottom:4px;margin-bottom:0;
+  }
+  .main-title{
+    color:var(--navy);font-size:32px;font-weight:700;line-height:1.25;
+    margin-bottom:6px;
+  }
+  .sub-title{
+    color:var(--navy-mid);font-size:20px;font-weight:600;line-height:1.35;
+  }
+  .presenter-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-top:6px;font-size:14px;color:var(--gray-text);
+  }
+  .presenter-row strong{color:var(--navy);}
+  .sabbatical-tag{
+    background:var(--blue-acc);color:white;padding:2px 8px;
+    border-radius:3px;font-weight:700;font-size:12px;letter-spacing:0.3px;
+  }
+  .bg-block{
+    background:var(--gray-bg);border-left:5px solid var(--blue-acc);
+    padding:11px 16px;margin-bottom:9px;font-size:15.5px;line-height:1.55;
+  }
+  .bg-block .h{color:var(--navy);font-weight:700;font-size:16px;margin-bottom:7px;letter-spacing:0.3px;}
+  .bg-block strong{color:var(--navy);}
+  .bg-block ul{list-style:none;padding:0;margin:0;}
+  .bg-block ul li{
+    position:relative;padding-left:20px;margin-bottom:5px;font-size:15px;line-height:1.5;
+  }
+  .bg-block ul li::before{
+    content:"●";position:absolute;left:2px;top:1px;
+    color:var(--blue-acc);font-size:11px;
+  }
+  .bg-block ul li.arrow{
+    color:var(--navy);font-weight:600;margin-top:6px;
+  }
+  .bg-block ul li.arrow::before{
+    content:"▶";color:var(--warn-red);font-size:13px;
+  }
+  .aim-banner{
+    background:linear-gradient(to right,var(--hi-green) 0%,#f0f7ee 100%);
+    border:2px solid #2e8b57;border-radius:4px;
+    padding:11px 16px;margin-top:8px;margin-bottom:8px;font-size:15.5px;line-height:1.55;
+  }
+  .aim-banner .h{color:#2e8b57;font-weight:700;font-size:15.5px;letter-spacing:0.3px;margin-bottom:6px;}
+  .aim-banner strong{color:var(--navy);}
+  .aim-banner .aim-lead{margin-bottom:6px;}
+  .aim-banner .aim-item{
+    padding:4px 0 4px 28px;position:relative;font-size:15px;
+  }
+  .aim-banner .aim-item .num{
+    position:absolute;left:0;top:4px;
+    background:#2e8b57;color:white;
+    width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:13px;
+  }
+  .aim-banner .aim-foot{margin-top:4px;color:var(--navy);font-weight:600;}
+
+  /* === Slide 2: Method (compact vertical spacing for 720px) === */
+  .formula-block{
+    background:linear-gradient(to bottom,white 0%,#fafafa 100%);
+    border:1px solid var(--gray-line);border-top:3px solid var(--navy);
+    padding:8px 14px;margin:5px 0 8px;
+  }
+  .formula-display{
+    font-family:"STIX Two Math","Cambria Math",Georgia,serif;
+    font-size:30px;text-align:center;color:var(--navy);
+    margin:6px 0 10px;font-style:italic;letter-spacing:1px;
+  }
+  .term{font-weight:bold;padding:0 3px;}
+  .term-red-bg{background:#fbe7e3;color:var(--term-red);padding:3px 8px;border-radius:4px;}
+  .term-purple-bg{background:var(--term-purple-bg);color:var(--term-purple);padding:3px 8px;border-radius:4px;}
+  .term-blue-bg{background:#d6e7f3;color:var(--term-blue);padding:3px 8px;border-radius:4px;}
+  .intuitive-row{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:5px;
+  }
+  .intuit-card{
+    padding:7px 12px;border-radius:3px;font-size:13px;line-height:1.45;
+    text-align:center;
+  }
+  .intuit-card.red{background:#fbe7e3;border-left:4px solid var(--term-red);}
+  .intuit-card.purple{background:var(--term-purple-bg);border-left:4px solid var(--term-purple);}
+  .intuit-card.blue{background:#d6e7f3;border-left:4px solid var(--term-blue);}
+  .intuit-card .h{font-weight:700;font-size:14px;color:var(--navy);margin-bottom:3px;letter-spacing:0.2px;}
+  .intuit-card .formula-mini{
+    font-family:"STIX Two Math",Georgia,serif;font-size:12px;
+    color:var(--gray-mid);font-style:italic;
+  }
+  .pipeline-mini{
+    background:var(--gray-bg);border-left:5px solid var(--navy);
+    padding:8px 16px;margin-top:7px;font-size:14px;line-height:1.5;
+  }
+  .pipeline-mini strong{color:var(--navy);}
+  .pipeline-mini .pipe-title{
+    color:var(--navy);font-weight:700;font-size:13px;
+    margin-bottom:5px;letter-spacing:0.3px;
+  }
+  .pipeline-mini .pipeline-step{
+    text-align:center;padding:2px 0;
+  }
+  .pipeline-mini .pipeline-arrow{
+    text-align:center;color:var(--blue-acc);font-size:13px;
+    font-weight:700;line-height:1;margin:1px 0;
+  }
+  table.results{width:100%;border-collapse:collapse;font-size:13px;margin:5px 0;}
+  table.results thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:5px 9px;border-bottom:2px solid var(--navy);font-size:12.5px;
+  }
+  table.results thead th:first-child{text-align:left;padding-left:14px;}
+  table.results tbody td{padding:5px 9px;border-bottom:1px dashed var(--gray-line);text-align:center;}
+  table.results tbody td:first-child{text-align:left;padding-left:14px;font-weight:600;}
+  table.results tbody tr.highlight td{background:var(--hi-green);font-weight:700;}
+  .method-cell{text-align:left !important;padding:5px 9px !important;line-height:1.35;}
+  .badge{
+    display:inline-block;background:var(--navy);color:white;
+    font-size:12px;font-weight:700;padding:2px 7px;border-radius:2px;
+    margin-left:5px;letter-spacing:0.3px;
+  }
+  .badge.green{background:#2e8b57;}
+  .footnote{margin-top:5px;color:var(--gray-mid);font-size:11.5px;font-style:italic;}
+
+  /* === Data table for Slide 1 === */
+  .data-table{width:100%;border-collapse:collapse;font-size:14px;}
+  .data-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:7px 10px;border-bottom:2px solid var(--navy);font-size:13.5px;
+  }
+  .data-table thead th:first-child{text-align:left;padding-left:12px;}
+  .data-table tbody td{padding:6px 10px;border-bottom:1px dashed var(--gray-line);text-align:center;}
+  .data-table tbody td:first-child{text-align:left;padding-left:12px;font-weight:600;}
+  .data-table tbody tr.total td{background:var(--hi-green);font-weight:700;color:var(--navy);}
+
+  /* === Slide 3: Data flow (compact for 720px) === */
+  .flow-step{
+    display:grid;grid-template-columns:54px 1fr 140px;gap:12px;
+    align-items:center;padding:6px 14px;
+    background:var(--gray-bg);border-left:5px solid var(--blue-acc);
+    border-radius:3px;margin-bottom:3px;
+  }
+  .flow-step.input  {border-left-color:var(--warn-red);background:#fdeeec;}
+  .flow-step.main   {border-left-color:var(--navy);background:linear-gradient(to right,#e3f0fb 0%,#d6e7f3 100%);}
+  .flow-step .step-num{
+    background:var(--blue-acc);color:white;
+    width:36px;height:36px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:16px;
+  }
+  .flow-step.input .step-num{background:var(--warn-red);}
+  .flow-step.main .step-num{background:var(--navy);}
+  .flow-step .step-body{font-size:13.5px;line-height:1.35;color:var(--gray-text);}
+  .flow-step .step-body .h{
+    color:var(--navy);font-weight:700;font-size:14.5px;
+    margin-bottom:2px;letter-spacing:0.2px;
+  }
+  .flow-step .step-body .desc{color:var(--gray-mid);font-size:12px;}
+  .flow-step .step-stat{
+    text-align:right;font-size:12px;color:var(--navy);font-weight:600;line-height:1.35;
+  }
+  .flow-step .step-stat .big{font-size:14px;font-weight:700;display:block;}
+  .flow-step.main .step-stat{color:var(--navy);}
+  .flow-arrow-mini{
+    text-align:center;color:var(--blue-acc);font-size:12px;font-weight:bold;
+    height:6px;line-height:6px;margin:0;
+  }
+  .legend-row{
+    display:flex;gap:18px;justify-content:flex-start;
+    margin-top:6px;padding:5px 12px;
+    background:#fafbfc;border:1px solid var(--gray-line);border-radius:3px;
+    font-size:12px;color:var(--gray-text);
+  }
+  .legend-row .ld{
+    display:inline-block;width:14px;height:14px;border-left:4px solid;
+    margin-right:5px;vertical-align:middle;
+  }
+  .legend-row .ld.input{border-color:var(--warn-red);background:#fdeeec;}
+  .legend-row .ld.proc {border-color:var(--blue-acc);background:var(--gray-bg);}
+  .legend-row .ld.main {border-color:var(--navy);background:linear-gradient(to right,#e3f0fb 0%,#d6e7f3 100%);}
+
+  /* === Slide 4: Results === */
+  .row{display:flex;gap:14px;margin-bottom:6px;}
+  .col{flex:1;}
+
+  /* === Slide 5: Conclusion (vertical bullet list) === */
+  .takeaway-list{margin-bottom:8px;}
+  .takeaway-item{
+    display:grid;grid-template-columns:42px 1fr;gap:12px;
+    align-items:start;padding:7px 14px;margin-bottom:5px;
+    background:linear-gradient(to right,#f7faff 0%,#fafbfc 100%);
+    border-left:5px solid var(--navy);border-radius:2px;
+  }
+  .takeaway-item.green{border-left-color:#2e8b57;background:linear-gradient(to right,#f0f7f3 0%,#fafffb 100%);}
+  .takeaway-item.yellow{border-left-color:#c39520;background:linear-gradient(to right,#fff8d4 0%,#fffbf0 100%);}
+  .takeaway-item.blue{border-left-color:var(--blue-acc);background:linear-gradient(to right,#e3f0fb 0%,#f7fbff 100%);}
+  .takeaway-item.purple{border-left-color:var(--term-purple);background:linear-gradient(to right,var(--term-purple-bg) 0%,#fafaff 100%);}
+  .takeaway-item .num-circle{
+    background:var(--navy);color:white;
+    width:32px;height:32px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:15px;margin-top:1px;
+  }
+  .takeaway-item.green  .num-circle{background:#2e8b57;}
+  .takeaway-item.yellow .num-circle{background:#c39520;}
+  .takeaway-item.blue   .num-circle{background:var(--blue-acc);}
+  .takeaway-item.purple .num-circle{background:var(--term-purple);}
+  .takeaway-item .body-area{padding-top:2px;}
+  .takeaway-item .takeaway-title{
+    color:var(--navy);font-weight:700;font-size:15px;
+    margin-bottom:2px;letter-spacing:0.2px;
+  }
+  .takeaway-item .takeaway-body{font-size:13px;line-height:1.5;color:var(--gray-text);}
+  .takeaway-item .takeaway-body strong{color:var(--navy);}
+  .key-number{font-family:"STIX Two Math",Georgia,serif;font-weight:700;color:var(--navy);font-size:16px;}
+  .conclusion-banner{
+    background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);
+    color:white;padding:9px 16px;border-radius:4px;margin-top:6px;
+  }
+  .conclusion-banner-title{font-size:13px;font-weight:700;margin-bottom:3px;letter-spacing:0.3px;}
+  .conclusion-banner-body{font-size:13px;line-height:1.5;}
+  .conclusion-banner-body em{font-style:normal;color:#fff8d4;font-weight:600;}
+  .future-work-box{
+    margin-top:8px;padding:9px 16px;
+    background:#fafbfc;border-left:5px solid var(--blue-acc);border-radius:2px;
+    font-size:13px;line-height:1.5;color:var(--gray-text);
+  }
+  .future-work-box strong{color:var(--navy);}
+  .future-work-box .fw-title{
+    color:var(--navy);font-weight:700;font-size:14px;
+    margin-bottom:3px;letter-spacing:0.3px;
+  }
+
+  @media print{
+    @page{size:1280px 720px;margin:0;}
+    html,body{background:white;width:1280px;}
+    .slide{box-shadow:none;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ========================================== -->
+<!-- Slide 1: Title + Intro + Background -->
+<!-- ========================================== -->
+<div class="slide">
+  <div style="position:absolute;top:32px;right:50px;font-size:13px;color:var(--gray-mid);font-weight:600;">
+    May 7, 2026
+  </div>
+
+  <!-- Title block (today's talk) -->
+  <div style="border-bottom:3px solid var(--navy);padding-bottom:12px;margin-bottom:14px;">
+    <div class="main-title">QUBO-Optimized Cell-Type-Specific Gene Panels</div>
+    <div class="sub-title">Cross-Cohort Classification of Multiple Sclerosis from Single-Cell RNA Sequencing</div>
+    <div style="margin-top:7px;color:var(--gray-mid);font-size:13px;font-style:italic;letter-spacing:0.2px;">
+      QUBO = Quadratic Unconstrained Binary Optimization
+    </div>
+  </div>
+
+  <!-- Self-introduction section header -->
+
+  <!-- Presenter info (full width) -->
+  <div>
+    <div style="margin-bottom:6px;">
+      <div style="font-size:24px;font-weight:700;color:var(--navy);line-height:1.15;">
+        Mizuho Asada, Ph.D
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:192px 1fr;gap:10px 16px;align-items:center;font-size:14px;color:var(--gray-text);line-height:1.5;margin-bottom:10px;">
+      <img src="figures_genes/photo_meiji_pharma.jpg"
+           style="width:192px;height:120px;object-fit:cover;border-radius:3px;border:1px solid var(--gray-line);"
+           alt="Meiji Pharmaceutical University"
+           onerror="this.style.background='#eef3f9';this.style.borderStyle='dashed';this.alt='[Meiji Pharma photo]';">
+      <div><strong style="color:var(--navy);">Assistant Professor</strong>, Lab. of Medical Molecular Analytics, <strong style="color:var(--navy);">Meiji Pharmaceutical University</strong></div>
+      <img src="figures_genes/photo_science_tokyo.jpg"
+           style="width:192px;height:120px;object-fit:cover;border-radius:3px;border:1px solid var(--gray-line);"
+           alt="Institute of Science Tokyo"
+           onerror="this.style.background='#eef3f9';this.style.borderStyle='dashed';this.alt='[Science Tokyo photo]';">
+      <div><strong style="color:var(--navy);">Lecturer</strong>, Department of Anesthesiology, <strong style="color:var(--navy);">Institute of Science Tokyo</strong></div>
+    </div>
+    <div style="font-size:13.5px;color:var(--navy-mid);line-height:1.45;margin-bottom:9px;font-style:italic;">
+      <strong style="color:var(--blue-acc);font-style:normal;">Visiting Researcher</strong> at <strong style="color:var(--blue-acc);font-style:normal;">MGH (Massachusetts General Hospital)</strong> since April 2026, working on bioinformatics and optimization methods for biomarker discovery.
+    </div>
+
+      <div style="background:#f7faff;border-left:4px solid var(--blue-acc);padding:9px 14px;border-radius:0 4px 4px 0;">
+        <div style="color:var(--navy);font-weight:700;font-size:14.5px;margin-bottom:6px;letter-spacing:0.3px;">▶ Research themes</div>
+        <div style="display:grid;gap:5px;font-size:13.5px;line-height:1.45;color:var(--gray-text);">
+          <div style="display:flex;align-items:flex-start;gap:9px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6d5b9c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="8" y1="8" x2="11" y2="16"/><line x1="16" y1="8" x2="13" y2="16"/><line x1="9" y1="6" x2="15" y2="6"/></svg>
+            <div><strong style="color:var(--navy);">① Cheminformatics</strong> — joint optimization of relevance × non-redundancy × cardinality (origin of today's QUBO framework)</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:9px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2e8b57" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><path d="M3 18h18M3 14h18M3 10h18M5 18v3M19 18v3M9 6c0-1.7 1.3-3 3-3s3 1.3 3 3v4H9V6z"/><circle cx="12" cy="14" r="1.2" fill="#2e8b57"/></svg>
+            <div><strong style="color:var(--navy);">② AI-assisted anesthesia management</strong> — PK/PD + machine learning for drug-effect prediction</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:9px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2874a6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><rect x="3" y="3" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2.2"/><path d="M21 17l-5-5-3 3-2-2-8 8"/></svg>
+            <div><strong style="color:var(--navy);">③ Clinical AI applications</strong> — medical image analysis and diagnostic-support models</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;padding:8px 14px;background:linear-gradient(to right,#f0f7f3 0%,#fafffb 100%);border-left:4px solid #2e8b57;border-radius:0 4px 4px 0;font-size:13.5px;line-height:1.45;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ Why this work?</strong> Applying cheminformatics-inspired optimization to <strong>scRNA-seq feature selection</strong> to improve <strong>cross-cohort reproducibility</strong> in MS biomarker discovery.
+    </div>
+  </div>
+
+  <div class="pagenum">1</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 2: Background + Aim + Dataset -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Introduction</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="bg-block">
+    <div class="h">▶ Background — unmet need for robust cell-level MS biomarkers</div>
+    <ul>
+      <li>MS diagnosis still relies on <strong>MRI and CSF findings</strong>; <strong>established molecular or cellular biomarkers remain limited</strong></li>
+      <li>scRNA-seq biomarker research has <strong>rapidly expanded</strong>, yet <strong>reproducibility across cohorts remains inconsistent</strong> due to batch effects and donor variability</li>
+      <li class="arrow">A <strong>reproducible cross-cohort single-cell biomarker framework</strong> is needed</li>
+    </ul>
+  </div>
+
+  <div class="aim-banner">
+    <div class="h">▶ Aim — Use QUBO optimization to achieve both within a single framework</div>
+    <div class="aim-item"><span class="num">1</span><strong>Biomarker performance</strong>: develop a classifier <strong>reproducible across independent cohorts</strong></div>
+    <div class="aim-item"><span class="num">2</span><strong>Biological validity</strong>: identify <strong>biologically relevant genes and pathways associated with MS pathophysiology</strong> in each cell type</div>
+  </div>
+
+  <div style="margin-top:8px;">
+    <div class="section-h smaller">▶ Dataset — 4 public scRNA-seq cohorts integrated</div>
+    <table class="data-table">
+      <thead><tr><th>Cohort</th><th>HD patients</th><th>MS patients</th><th>Total patients</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Heming</td><td>9</td><td>9</td><td>18</td><td style="color:var(--gray-mid);">CSF only (longitudinal: ~2 samples/patient)</td></tr>
+        <tr><td>Pappalardo</td><td>6</td><td>5</td><td>11</td><td style="color:var(--gray-mid);">CSF + PBMC</td></tr>
+        <tr><td>Ramesh</td><td>3</td><td>14</td><td>17</td><td style="color:var(--gray-mid);">CSF + PBMC</td></tr>
+        <tr><td>Touil</td><td>4</td><td>0</td><td>4</td><td style="color:var(--gray-mid);">train only (HD only)</td></tr>
+        <tr class="total"><td>Total</td><td>22</td><td>28</td><td>50 patients</td><td>99 samples · 385,116 cells</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagenum">2</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 2: Method -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Method</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h"><strong>Quadratic Unconstrained Binary Optimization (QUBO)</strong> for cell-type-specific gene selection</div>
+
+  <div style="background:#f7faff;border-left:4px solid var(--blue-acc);padding:6px 14px;margin:6px 0 8px;font-size:13.5px;line-height:1.55;color:var(--gray-text);">
+    <strong style="color:var(--navy);">▶ What is QUBO?</strong> A binary optimization framework — minimize a single objective function H(x) where each gene is either selected (1) or not (0). Our H(x) has three terms:
+  </div>
+
+  <div class="formula-block">
+    <div class="formula-display">
+      H(x) = <span class="term term-red-bg">−s<sup>⊤</sup>x</span>
+            + <span class="term term-purple-bg">γ · x<sup>⊤</sup>R x</span>
+            + <span class="term term-blue-bg">λ (Σx − K)<sup>2</sup></span>
+    </div>
+    <div class="intuitive-row">
+      <div class="intuit-card red">
+        <div class="h">① Pick informative genes</div>
+        <div class="formula-mini">s<sub>i</sub> = edgeR |t|²</div>
+      </div>
+      <div class="intuit-card purple">
+        <div class="h">② Penalize correlated genes</div>
+        <div class="formula-mini">R<sub>ij</sub> penalty → redundancy control</div>
+      </div>
+      <div class="intuit-card blue">
+        <div class="h">③ Fixed panel size K</div>
+        <div class="formula-mini">K ∈ {10, 20, 30} auto by inner CV</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline mini-illustration (simplified S10) -->
+  <div style="background:var(--gray-bg);border-left:5px solid var(--navy);padding:8px 14px;margin-top:8px;">
+    <div style="color:var(--navy);font-weight:700;font-size:13px;margin-bottom:6px;letter-spacing:0.3px;">▶ Pipeline (identical for all 5 methods)</div>
+    <svg viewBox="0 0 1100 110" width="100%" height="auto" style="display:block;" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'Hiragino Kaku Gothic ProN',sans-serif">
+      <!-- INPUT cells -->
+      <text x="60" y="14" font-size="10" font-weight="700" fill="#4F4F70" text-anchor="middle" letter-spacing="0.4">INPUT</text>
+      <text x="60" y="26" font-size="9" fill="#6b6b6b" text-anchor="middle">scRNA-seq</text>
+      <g>
+        <circle cx="35" cy="50" r="5" fill="#d97757"/><circle cx="55" cy="50" r="5" fill="#c39520"/><circle cx="75" cy="50" r="5" fill="#2e8b57"/>
+        <circle cx="35" cy="68" r="5" fill="#6d5b9c"/><circle cx="55" cy="68" r="5" fill="#5b8db8"/><circle cx="75" cy="68" r="5" fill="#d97757"/>
+        <circle cx="35" cy="86" r="5" fill="#2e8b57"/><circle cx="55" cy="86" r="5" fill="#6d5b9c"/><circle cx="75" cy="86" r="5" fill="#c39520"/>
+      </g>
+      <line x1="100" y1="68" x2="135" y2="68" stroke="#4F4F70" stroke-width="1.6" marker-end="url(#a3)"/>
+
+      <!-- 5 cell-type panels -->
+      <g font-size="10" font-weight="700" fill="white" text-anchor="middle">
+        <g transform="translate(140,32)">
+          <rect width="95" height="72" rx="4" fill="#fdf3ef" stroke="#d97757" stroke-width="1.2"/>
+          <rect width="95" height="18" rx="4" fill="#d97757"/><rect y="14" width="95" height="4" fill="#d97757"/>
+          <text x="47.5" y="13">B cell</text>
+          <text x="47.5" y="36" font-size="9" fill="#4F4F70" font-weight="600">QUBO 10–30</text>
+          <text x="47.5" y="50" font-size="9" fill="#4F4F70" font-weight="600">→ L2 logistic</text>
+          <text x="47.5" y="66" font-size="11" fill="#d97757" font-weight="700">P(MS)</text>
+        </g>
+        <g transform="translate(245,32)">
+          <rect width="95" height="72" rx="4" fill="#fbf6e8" stroke="#c39520" stroke-width="1.2"/>
+          <rect width="95" height="18" rx="4" fill="#c39520"/><rect y="14" width="95" height="4" fill="#c39520"/>
+          <text x="47.5" y="13">Mono</text>
+          <text x="47.5" y="36" font-size="9" fill="#4F4F70" font-weight="600">QUBO 10–30</text>
+          <text x="47.5" y="50" font-size="9" fill="#4F4F70" font-weight="600">→ L2 logistic</text>
+          <text x="47.5" y="66" font-size="11" fill="#c39520" font-weight="700">P(MS)</text>
+        </g>
+        <g transform="translate(350,32)">
+          <rect width="95" height="72" rx="4" fill="#eaf5ee" stroke="#2e8b57" stroke-width="1.2"/>
+          <rect width="95" height="18" rx="4" fill="#2e8b57"/><rect y="14" width="95" height="4" fill="#2e8b57"/>
+          <text x="47.5" y="13">NK</text>
+          <text x="47.5" y="36" font-size="9" fill="#4F4F70" font-weight="600">QUBO 10–30</text>
+          <text x="47.5" y="50" font-size="9" fill="#4F4F70" font-weight="600">→ L2 logistic</text>
+          <text x="47.5" y="66" font-size="11" fill="#2e8b57" font-weight="700">P(MS)</text>
+        </g>
+        <g transform="translate(455,32)">
+          <rect width="95" height="72" rx="4" fill="#f1eef7" stroke="#6d5b9c" stroke-width="1.2"/>
+          <rect width="95" height="18" rx="4" fill="#6d5b9c"/><rect y="14" width="95" height="4" fill="#6d5b9c"/>
+          <text x="47.5" y="13">dnT</text>
+          <text x="47.5" y="36" font-size="9" fill="#4F4F70" font-weight="600">QUBO 10–30</text>
+          <text x="47.5" y="50" font-size="9" fill="#4F4F70" font-weight="600">→ L2 logistic</text>
+          <text x="47.5" y="66" font-size="11" fill="#6d5b9c" font-weight="700">P(MS)</text>
+        </g>
+        <g transform="translate(560,32)">
+          <rect width="95" height="72" rx="4" fill="#eef4f8" stroke="#5b8db8" stroke-width="1.2"/>
+          <rect width="95" height="18" rx="4" fill="#5b8db8"/><rect y="14" width="95" height="4" fill="#5b8db8"/>
+          <text x="47.5" y="13">gdT</text>
+          <text x="47.5" y="36" font-size="9" fill="#4F4F70" font-weight="600">QUBO 10–30</text>
+          <text x="47.5" y="50" font-size="9" fill="#4F4F70" font-weight="600">→ L2 logistic</text>
+          <text x="47.5" y="66" font-size="11" fill="#5b8db8" font-weight="700">P(MS)</text>
+        </g>
+      </g>
+
+      <!-- converging lines -->
+      <g stroke="#9aa3b2" stroke-width="1.2" fill="none">
+        <line x1="235" y1="68" x2="900" y2="68"/>
+        <line x1="340" y1="68" x2="900" y2="68"/>
+        <line x1="445" y1="68" x2="900" y2="68"/>
+        <line x1="550" y1="68" x2="900" y2="68"/>
+        <line x1="655" y1="68" x2="900" y2="68"/>
+      </g>
+
+      <!-- Soft voting + final output -->
+      <g transform="translate(900,30)">
+        <circle cx="42" cy="38" r="38" fill="#4F4F70"/>
+        <text x="42" y="30" font-size="11" font-weight="700" fill="white" text-anchor="middle">Soft voting</text>
+        <text x="42" y="43" font-size="9" fill="#cfd9e8" text-anchor="middle">(average)</text>
+        <text x="42" y="55" font-size="9" fill="#fff8d4" text-anchor="middle">→ MS or HD</text>
+        <text x="42" y="92" font-size="11" font-weight="700" fill="#2e8b57" text-anchor="middle">MS / HD</text>
+        <text x="42" y="106" font-size="9" font-style="italic" fill="#6b6b6b" text-anchor="middle">(target / objective)</text>
+      </g>
+
+      <defs>
+        <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#4F4F70" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="section-h smaller" style="margin-top:10px;">5-method comparison under identical conditions</div>
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:18%">Method</th>
+        <th style="width:55%">Selection logic</th>
+        <th style="width:27%">Characteristic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>DE_top</td><td class="method-cell">Top-K by edgeR <strong>|t|</strong> (univariate)</td><td>Simplest baseline</td></tr>
+      <tr><td>HVG</td><td class="method-cell">Top-K by expression variance (= most variable genes)</td><td>Unsupervised variability-based selection</td></tr>
+      <tr><td>LASSO</td><td class="method-cell">L1-regularized logistic (λ tuned to K nonzero)</td><td>Sparse feature selection</td></tr>
+      <tr><td>Elastic Net</td><td class="method-cell">L1 + L2 hybrid (top-K |coef|)</td><td>Robust to collinearity</td></tr>
+      <tr class="highlight"><td>QUBO <span class="badge green">Proposed</span></td><td class="method-cell"><strong>Joint</strong> relevance × non-redundancy × cardinality</td><td><strong>Explicit redundancy control</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p class="footnote">All 5 methods share <strong>the same candidate pool, K-grid, L2 logistic, and per-cell-type ensemble</strong>. <strong>Only the selection logic differs</strong>.</p>
+
+  <div class="pagenum">3</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 3: Data Preparation Flow (simplified, 7 steps, 3 colors) -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Data Preparation Flow</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="flow-step input">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="h">Input — integrated scRNA-seq dataset</div>
+      <div class="desc">4 cohorts: Pappalardo / Heming / Ramesh / Touil (Seurat object)</div>
+    </div>
+    <div class="step-stat"><span class="big">385k cells</span>50 donors · 32k genes</div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="h">Cell-type annotation (Azimuth → 8 immune cell types)</div>
+      <div class="desc">B / Mono / CD4_T / CD8_T / NK / DC / dnT / gdT (≥ 20 cells/donor)</div>
+    </div>
+    <div class="step-stat"><span class="big">8 → 5/4 ct</span>retained after QC</div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="h">Per-donor pseudobulk (CSF + PBMC)</div>
+      <div class="desc">Mean aggregation across cells within each (donor × cell type × tissue) → <strong>donor as the statistical unit</strong></div>
+    </div>
+    <div class="step-stat"><span class="big">CSF 226k</span>+ PBMC 159k</div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="h">Gene filtering (HVG + biology filter)</div>
+      <div class="desc">3,000 HVG/ct → remove mitochondrial / ribosomal / heat-shock / nuclear lncRNA (MT, RPL, RPS, HSP, MALAT1, NEAT1, ...) → ~7,960 remaining</div>
+    </div>
+    <div class="step-stat"><span class="big">~7,960 genes</span>Heumos 2023 standard</div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step">
+    <div class="step-num">5</div>
+    <div class="step-body">
+      <div class="h">edgeR DEG → top 100 candidate genes per cell type</div>
+      <div class="desc">~Dx + log10(n_cells) + age + sex + batch (within each cell type and training fold)</div>
+    </div>
+    <div class="step-stat"><span class="big">100/instance</span></div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step main">
+    <div class="step-num">6</div>
+    <div class="step-body">
+      <div class="h">QUBO selection (per cell type, K ∈ {10, 20, 30})</div>
+      <div class="desc">K auto-selected by inner 5-fold CV; solved by classical <strong>simulated annealing</strong> (~3 sec/instance)</div>
+    </div>
+    <div class="step-stat"><span class="big">~17 genes/ct</span></div>
+  </div>
+  <div class="flow-arrow-mini">▼</div>
+
+  <div class="flow-step main">
+    <div class="step-num">7</div>
+    <div class="step-body">
+      <div class="h">Average per-cell-type MS probabilities → patient-level classification</div>
+      <div class="desc">L2 logistic per cell type → mean of MS probabilities (soft voting) → patient-level MS / HD call (CSF 5 / PBMC 4 cell types)</div>
+    </div>
+    <div class="step-stat"><span class="big">CSF 3 / PBMC 2</span>Leave-One-Cohort-Out</div>
+  </div>
+
+  <div class="legend-row">
+    <span><span class="ld input"></span>Input</span>
+    <span><span class="ld proc"></span>Processing</span>
+    <span><span class="ld main"></span>Main steps (QUBO + ensemble)</span>
+  </div>
+
+  <div class="pagenum">4</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 4: Results 1 — Cross-cohort biomarker performance -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Results 1 — Cross-cohort biomarker performance</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Table 1. 7-method cross-cohort comparison — held-out AUC / F1 / MCC (CSF, v6 DESeq2 tight)</div>
+
+  <table class="results" style="font-size:14px;margin-top:10px;">
+    <thead>
+      <tr style="background:#e3f0fb;">
+        <th style="width:28%">Method</th>
+        <th>AUC</th><th>σ_AUC</th>
+        <th>F1</th><th>MCC</th><th>AP</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>QUBO_hybrid <span class="badge green">Main</span></td>
+        <td>0.858</td><td>0.108</td>
+        <td><strong>0.731</strong> ★</td><td><strong>0.427</strong> ★</td><td>0.900</td>
+      </tr>
+      <tr><td>QUBO</td><td>0.836</td><td>0.126</td><td>0.705</td><td>0.380</td><td>0.887</td></tr>
+      <tr><td>QUBO_consensus</td><td>0.791</td><td>0.151</td><td>0.696</td><td>0.329</td><td>0.854</td></tr>
+      <tr><td>DE_top</td><td><strong>0.873</strong> ★</td><td>0.132</td><td>0.691</td><td>0.350</td><td><strong>0.915</strong> ★</td></tr>
+      <tr><td>HVG</td><td>0.859</td><td><strong>0.100</strong> ★</td><td>0.668</td><td>0.317</td><td>0.894</td></tr>
+      <tr><td>Elastic Net</td><td>0.838</td><td>0.145</td><td>0.712</td><td>0.327</td><td>0.880</td></tr>
+      <tr><td>LASSO</td><td>0.797</td><td>0.137</td><td>0.708</td><td>0.341</td><td>0.860</td></tr>
+    </tbody>
+  </table>
+
+  <p class="footnote" style="font-size:13px;">
+    ★ = best within each metric. <strong>QUBO_hybrid is #1 on F1 / MCC among 7 methods</strong>; #2 on AUC and AP (DE_top is marginally higher). 3 cohorts (Pappalardo / Heming / Ramesh) × 5 folds × 8 cell types = 120 panels. MCC is robust to class imbalance (Chicco &amp; Jurman 2020) — addresses Ramesh's 82% MS skew.
+  </p>
+
+  <div class="pagenum">5</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 6: Results 2 — Selected genes per cell type -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Results 2 — Selected genes per cell type (CSF)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">QUBO-selected genes in <strong style="color:var(--blue-acc);">CSF</strong> — selection stability across cell types and validation panels</div>
+
+  <img src="figures_genes/fig3_top_genes_per_celltype.png"
+       style="display:block;margin:6px auto 0;max-width:100%;max-height:430px;border:1px solid var(--gray-line);border-radius:2px;"
+       alt="QUBO selection frequency heatmap (CSF, 8 cell types)">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px;">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:10px 14px;font-size:13px;line-height:1.55;color:var(--gray-text);">
+      <strong style="color:var(--navy);">▶ Interpretation</strong>: each cell-type panel reflects <strong>biologically coherent programs</strong>. B = <strong>plasma / IgM (IGHM)</strong>; Mono = <strong>iron metabolism (FTL) + MHC II (HLA-DPB1)</strong>; NK = <strong>cytotoxic (KLRB1/KLRC1/CCL5)</strong>; dnT = <strong>cytotoxic + Type I IFN (GZMA, ISG15)</strong>; gdT = <strong>cytotoxic (GZMA, CD69)</strong>. CD4_T/CD8_T/DC yielded <strong>no stable selection</strong>, likely reflecting signal dilution in heterogeneous pseudobulk populations (greyed columns).
+      <ul style="margin:6px 0 0 0;padding-left:18px;font-size:12px;color:var(--gray-mid);">
+        <li><strong style="color:#c8102e;">Red boxes</strong> = genes mapped to an MS-relevant biology category (right-side green labels). <strong>Selected by biology, not by raw frequency</strong> (e.g., Mono CST3 = 100% is a generic cell-identity marker and was excluded).</li>
+      </ul>
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:10px 14px;font-size:13px;line-height:1.55;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ External validation against published signatures</strong>: Compared with the <strong>pathogenic B-cell signature (Ramesh et al. 2020, PNAS)</strong> — <strong>all 13 genes retained in our candidate pool were independently recovered by QUBO</strong>. Similarly, <strong>9/12</strong> genes from a CSF immune-dynamics signature were captured — <strong>supporting the biological validity of the selected panels</strong>.
+    </div>
+  </div>
+
+  <div class="pagenum">6</div>
+</div>
+
+<!-- ========================================== -->
+<!-- Slide 7: Conclusion -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label">Conclusion</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO delivers biology and biomarker simultaneously</div>
+
+  <div class="takeaway-list">
+    <div class="takeaway-item green">
+      <div class="num-circle">1</div>
+      <div class="body-area">
+        <div class="takeaway-title">Biomarker performance</div>
+        <div class="takeaway-body">
+          QUBO_hybrid: CSF <span class="key-number">AUC 0.858</span>, <span class="key-number">F1 0.731</span>, <span class="key-number">MCC 0.427</span>. <strong>#1 on F1 / MCC among 7 methods</strong> (imbalance-robust), #2 on AUC behind DE_top.
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway-item yellow">
+      <div class="num-circle">2</div>
+      <div class="body-area">
+        <div class="takeaway-title">Biological validity</div>
+        <div class="takeaway-body">
+          Mono captures <strong>MHC II + iron metabolism</strong>, NK/dnT/gdT capture the <strong>cytotoxic axis</strong>, B cells capture <strong>immunoglobulin-related programs</strong> — <strong>captured known MS-associated immune programs</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway-item blue">
+      <div class="num-circle">3</div>
+      <div class="body-area">
+        <div class="takeaway-title">Cross-cohort reproducibility</div>
+        <div class="takeaway-body">
+          σ_AUC <strong>0.108</strong> across 3 cohorts (top-2 among supervised methods). Heming (balanced) 0.738; Pappalardo / Ramesh 0.89-0.95 — supporting <strong>translational potential</strong> via clinically relevant reproducibility.
+        </div>
+      </div>
+    </div>
+
+    <div class="takeaway-item purple">
+      <div class="num-circle">4</div>
+      <div class="body-area">
+        <div class="takeaway-title">Methodological novelty</div>
+        <div class="takeaway-body">
+          To our knowledge, <strong>among the first frameworks to jointly optimize relevance × non-redundancy × cardinality</strong> for cell-type-specific scRNA-seq biomarker design — <strong>explicitly modeling redundancy</strong>, unlike DE-top and standard sparse selection approaches.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="conclusion-banner">
+    <div class="conclusion-banner-title">Implication</div>
+    <div class="conclusion-banner-body">
+      <strong>QUBO provides a unified framework for jointly evaluating biomarker reproducibility and biological coherence in MS scRNA-seq data</strong> — informing both translational potential and mechanistic discovery.
+    </div>
+  </div>
+
+  <div class="future-work-box">
+    <div class="fw-title">▶ Future Work (Phase 2) — Resolving T-cell signal attenuation</div>
+    <ul style="margin:4px 0 0 0;padding-left:20px;font-size:12.5px;line-height:1.5;">
+      <li><strong>Limitation</strong>: Pseudobulk aggregation attenuates key T-cell signals (<strong>CD4 Th17, CD8 cytotoxic</strong>)</li>
+      <li><strong>Approach: Multi-Instance Learning (MIL)</strong> — Each donor = bag of cells → Attention identifies <strong>disease-associated cell subsets</strong> (e.g., Th17-like, Trm/exhausted CD8)</li>
+      <li><strong>Extension of QUBO</strong>: Gene selection → <strong>Cell coreset selection</strong> → Select informative cells per donor</li>
+    </ul>
+  </div>
+
+  <div class="pagenum">7</div>
+</div>
+
+</body>
+</html>

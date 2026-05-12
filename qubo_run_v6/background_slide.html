@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>Background スライド</title>
+<style>
+  :root {
+    --navy:      #1f3a5f;
+    --navy-mid:  #2c4a73;
+    --blue-acc:  #3a6db0;
+    --gray-text: #303030;
+    --gray-mid:  #6b6b6b;
+    --gray-line: #d6d6d6;
+    --gray-bg:   #f7f7f7;
+    --hi-yellow: #fff8d4;
+    --hi-green:  #e8f4ec;
+    --warn-red:  #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans CJK JP",
+                  -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #ddd;
+    color: var(--gray-text);
+    padding: 30px 0;
+  }
+  .slide {
+    width: 1280px; height: 720px; margin: 0 auto 40px;
+    background: white;
+    padding: 36px 50px 28px;
+    position: relative;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .pagenum { position: absolute; right: 30px; bottom: 14px; color: #999; font-size: 13px; }
+  .deco-squares {
+    position: absolute; top: 36px; right: 50px; display: flex; gap: 6px;
+  }
+  .deco-squares span { width: 11px; height: 11px; background: var(--gray-line); display: inline-block; }
+  .deco-squares span:last-child { background: var(--navy); }
+  .slide-label { color: var(--navy); font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .section-h {
+    color: var(--navy); font-size: 22px; font-weight: 700;
+    border-left: 6px solid var(--navy); padding-left: 14px;
+    margin-bottom: 16px; line-height: 1.3;
+  }
+  .section-h.smaller { font-size: 17px; margin-bottom: 8px; border-left-width: 5px; padding-left: 12px; }
+  .row { display: flex; gap: 24px; margin-bottom: 14px; }
+  .col { flex: 1; }
+  .panel {
+    background: var(--gray-bg);
+    border-left: 4px solid var(--navy);
+    padding: 12px 16px 14px;
+    height: 100%;
+  }
+  .panel.warn { border-left-color: var(--warn-red); background: #fbe7e3; }
+  .panel.green { border-left-color: #2e8b57; background: #e8f4ec; }
+  .panel-title { color: var(--navy); font-weight: 700; font-size: 14px; margin-bottom: 6px; letter-spacing: 0.3px; }
+  .panel ul { list-style: none; padding-left: 0; }
+  .panel ul li {
+    position: relative; padding-left: 16px;
+    margin-bottom: 5px; font-size: 13.5px; line-height: 1.5;
+  }
+  .panel ul li::before {
+    content: "•"; position: absolute; left: 4px;
+    color: var(--blue-acc); font-weight: bold;
+  }
+  .stat-bar {
+    background: linear-gradient(to right, white 0%, #fafafa 100%);
+    border-top: 3px solid var(--navy);
+    border: 1px solid var(--gray-line);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .stat-cell .num {
+    color: var(--navy); font-size: 22px; font-weight: 700; line-height: 1;
+  }
+  .stat-cell .label {
+    font-size: 12px; color: var(--gray-mid); margin-top: 4px; line-height: 1.3;
+  }
+  .arrow {
+    text-align: center;
+    color: var(--blue-acc);
+    font-size: 22px;
+    margin: 6px 0;
+  }
+  .proposal {
+    background: linear-gradient(to right, var(--hi-green) 0%, #f0f7ee 100%);
+    border: 2px solid #2e8b57;
+    padding: 14px 20px;
+    margin-top: 12px;
+    border-radius: 4px;
+  }
+  .proposal-title {
+    color: var(--navy); font-size: 15px; font-weight: 700; margin-bottom: 6px;
+  }
+  .proposal-body { font-size: 14px; line-height: 1.55; color: var(--gray-text); }
+  .proposal-body strong { color: var(--navy); }
+  ul.bullets { list-style: none; }
+  ul.bullets li {
+    position: relative; padding-left: 22px; margin-bottom: 7px;
+    font-size: 15px; line-height: 1.55; color: var(--gray-text);
+  }
+  ul.bullets li::before {
+    content: ""; position: absolute; left: 0; top: 8px;
+    width: 9px; height: 9px; background: var(--navy);
+  }
+</style>
+</head>
+<body>
+
+<!-- Background slide (JP) -->
+<div class="slide">
+  <div class="slide-label">Background</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">なぜ MS の cross-cohort 分類が課題か</div>
+
+  <ul class="bullets">
+    <li>多発性硬化症 (MS) は世界で約 <strong>280 万人</strong> が罹患する難治性自己免疫疾患</li>
+    <li>scRNA-seq による <strong>診断バイオマーカー研究</strong>が活発化している一方、 <strong>施設間で実験条件が異なると判別精度が崩壊</strong>する問題が顕在化</li>
+  </ul>
+
+  <div class="stat-bar">
+    <div class="stat-cell">
+      <div class="num">10x chemistry version</div>
+      <div class="label">v2 / v3 / v3.1 で UMI 分布が変動</div>
+    </div>
+    <div class="stat-cell">
+      <div class="num">Cryopreservation</div>
+      <div class="label">凍結 vs fresh で生細胞構成が変化</div>
+    </div>
+    <div class="stat-cell">
+      <div class="num">Sampling protocol</div>
+      <div class="label">CSF 採取量、密度勾配分離の差異</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <div class="panel warn">
+        <div class="panel-title">既存手法の限界</div>
+        <ul>
+          <li><strong>DE-top (top-|t| ranking)</strong>: 同一経路の冗長な遺伝子を選びがち、cohort 依存性が高い</li>
+          <li><strong>LASSO / Elastic Net</strong>: 遺伝子数 K の制御が <strong>正則化パラメタ λ の間接調整</strong> しかなく、ぴったり K=20 が出せない</li>
+          <li><strong>HVG (高変動遺伝子)</strong>: 教師なしのため batch effect で動く遺伝子も拾ってしまう</li>
+          <li><strong>Cell-level Wilcoxon</strong> (Seurat::FindMarkers): pseudoreplication 問題で false positive 過大 (Squair et al. 2021)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel green">
+        <div class="panel-title">本研究のアプローチ</div>
+        <ul>
+          <li><strong>Cell type 別 QUBO 最適化</strong>: 8 つの免疫細胞種で独立にパネル設計</li>
+          <li><strong>Relevance + Redundancy + Cardinality を同時最適化</strong>: 既存手法では同時に扱えなかった 3 軸</li>
+          <li><strong>3 cohort × LOOCV で外部汎化を直接評価</strong>: 別施設でも安定するパネルか定量化</li>
+          <li><strong>Biology filter 早期適用</strong>: housekeeping/mito/ribosomal を選択前に除外、選択遺伝子の生物学的妥当性を担保</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="proposal">
+    <div class="proposal-title">▶ 提案: QUBO による cell-type 特異的遺伝子パネル設計フレームワーク</div>
+    <div class="proposal-body">
+      <strong>「relevance × non-redundancy × cardinality」を同時最適化</strong>することで、
+      <strong>cross-cohort で再現可能な MS バイオマーカーパネル</strong>を構築する。
+    </div>
+  </div>
+
+  <div class="pagenum">2</div>
+</div>
+
+</body>
+</html>

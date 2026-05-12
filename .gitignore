@@ -61,9 +61,30 @@ data/
 seurat_*.rds
 so.*.rds
 
-# Output / intermediate (large)
+# Output / intermediate (large) — exclude all per-cohort per-fold raw output
 qubo_run/
 qubo_run_v5/
+
+# qubo_run_v6: keep summary CSVs and slides at top level; exclude raw output folders
+qubo_run_v6/v6_edger*/
+qubo_run_v6/v6consensus_*/
+qubo_run_v6/v6deseq2_*/
+qubo_run_v6/v6deseq2MI_*/
+qubo_run_v6/v6deseq2grid_*/
+qubo_run_v6/v6deseq2qsweep_*/
+qubo_run_v6/v6deseq2tight_*/
+qubo_run_v6/v6entrue_*/
+qubo_run_v6/v6full_*/
+qubo_run_v6/v6lm_*/
+qubo_run_v6/v6tier12*/
+qubo_run_v6/v6tuned*/
+qubo_run_v6/v7l3_*/
+qubo_run_v6/v8mixed_*/
+qubo_run_v6/v9*/
+qubo_run_v6/gene_analysis*/
+qubo_run_v6/aucell_results/
+
+# Large generated files
 qubo_run_v6/*.csv.gz
 qubo_run_v6/*/*.csv.gz
 qubo_run_v6/figures_genes/*.svg

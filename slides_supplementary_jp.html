@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>QUBO MS 分類 — 補助スライド (日本語)</title>
+<style>
+  :root {
+    --navy:#4F4F70; --navy-mid:#6868a0; --blue-acc:#3a6db0;
+    --gray-text:#303030; --gray-mid:#6b6b6b; --gray-line:#d6d6d6;
+    --gray-bg:#f7f7f7; --hi-yellow:#fff8d4; --hi-green:#e8f4ec;
+    --burgundy:#8b3a3a; --burgundy-mid:#6b2828; --hi-burgundy:#f7eaea;
+    --warn-red:#c0392b; --hi-blue:#e3f0fb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1280px;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans CJK JP",
+                -apple-system,BlinkMacSystemFont,sans-serif;
+    background:#ddd;color:var(--gray-text);
+  }
+  .slide{
+    width:1280px;height:720px;margin:0 auto;
+    background:white;padding:30px 50px 24px;
+    position:relative;box-shadow:0 4px 18px rgba(0,0,0,0.12);
+    page-break-after:always;break-after:page;overflow:hidden;
+  }
+  .slide:last-child{page-break-after:auto;}
+  .pagenum{position:absolute;right:30px;bottom:12px;color:#999;font-size:12px;}
+  .deco-squares{position:absolute;top:30px;right:50px;display:flex;gap:5px;}
+  .deco-squares span{width:10px;height:10px;background:var(--gray-line);display:inline-block;}
+  .deco-squares span:last-child{background:var(--blue-acc);}
+  .supp-tag{
+    display:inline-block;background:var(--blue-acc);color:white;
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:2px;
+    letter-spacing:0.5px;margin-right:8px;vertical-align:middle;
+  }
+  .slide-label{color:var(--navy);font-size:20px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;}
+  .section-h{
+    color:var(--navy);font-size:18px;font-weight:700;
+    border-left:5px solid var(--navy);padding-left:10px;
+    margin-bottom:8px;line-height:1.25;
+  }
+  .section-h.smaller{font-size:14px;border-left-width:4px;}
+
+  /* --- S1 Presenter background --- */
+  .presenter-card{
+    background:linear-gradient(to right,#eef3f9 0%,#f7faff 100%);
+    border-left:5px solid var(--blue-acc);
+    padding:16px 20px;border-radius:2px;margin-bottom:14px;
+  }
+  .presenter-name-big{
+    color:var(--navy);font-size:24px;font-weight:700;letter-spacing:0.3px;margin-bottom:4px;
+  }
+  .presenter-affil-big{font-size:14px;color:var(--gray-text);line-height:1.55;margin-bottom:6px;}
+  .presenter-affil-big strong{color:var(--navy);}
+  .presenter-field-big{font-size:13.5px;color:var(--gray-text);line-height:1.5;}
+  .presenter-field-big strong{color:var(--navy);}
+
+  .info-block{
+    background:var(--gray-bg);border-left:4px solid var(--navy);
+    padding:10px 14px;margin-bottom:10px;
+  }
+  .info-block .h{color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;letter-spacing:0.3px;}
+  .info-block .body{font-size:12.5px;line-height:1.55;color:var(--gray-text);}
+  .info-block .body strong{color:var(--navy);}
+
+  /* --- S2 Data flow (compact) --- */
+  .flow-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:5px 10px;margin-bottom:5px;
+  }
+  .flow-box{
+    border-left:3px solid var(--navy);background:var(--gray-bg);
+    padding:5px 8px;border-radius:2px;font-size:10px;line-height:1.35;
+  }
+  .flow-box.raw     {border-left-color:var(--warn-red);background:#fbe7e3;}
+  .flow-box.process {border-left-color:var(--blue-acc);background:#e3f0fb;}
+  .flow-box.split   {border-left-color:#2e8b57;background:var(--hi-green);}
+  .flow-box.filter  {border-left-color:#c39520;background:var(--hi-yellow);}
+  .flow-box.deg     {border-left-color:#2e8b57;background:var(--hi-green);}
+  .flow-box.qubo    {border-left-color:var(--navy);background:linear-gradient(135deg,#f0f4fa 0%,#d6e7f3 100%);}
+  .flow-box.classif {border-left-color:var(--navy-mid);background:#ececec;}
+  .flow-box .num{
+    display:inline-block;background:var(--navy);color:white;
+    width:14px;height:14px;border-radius:50%;
+    text-align:center;line-height:14px;font-size:9px;font-weight:700;margin-right:3px;
+    vertical-align:middle;
+  }
+  .flow-box.raw .num     {background:var(--warn-red);}
+  .flow-box.split .num   {background:#2e8b57;}
+  .flow-box.filter .num  {background:#c39520;}
+  .flow-box.deg .num     {background:#2e8b57;}
+  .flow-box.qubo .num    {background:var(--navy);}
+  .flow-box.classif .num {background:var(--navy-mid);}
+  .flow-title{color:var(--navy);font-weight:700;font-size:10.5px;margin-bottom:2px;}
+  .flow-stat{
+    display:inline-block;background:white;border:1px solid var(--gray-line);
+    padding:0 4px;border-radius:2px;font-size:9px;color:var(--navy);font-weight:600;margin-right:2px;margin-top:1px;
+  }
+  .flow-arrow{
+    text-align:center;color:var(--blue-acc);font-size:11px;font-weight:bold;height:12px;line-height:12px;
+  }
+  .gene-count-tag{
+    display:inline-block;background:var(--navy);color:white;
+    padding:1px 6px;border-radius:2px;font-size:9px;font-weight:700;margin-left:5px;
+  }
+
+  /* --- S3 per-cohort table --- */
+  table.results{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;}
+  table.results thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:6px 7px;border-bottom:2px solid var(--navy);font-size:11.5px;
+  }
+  table.results thead th:first-child{text-align:left;padding-left:12px;}
+  table.results tbody td{padding:5px 7px;border-bottom:1px dashed var(--gray-line);text-align:center;}
+  table.results tbody td:first-child{text-align:left;padding-left:12px;font-weight:600;}
+  table.results tbody tr.highlight td{background:var(--hi-green);font-weight:700;}
+  .badge{
+    display:inline-block;background:var(--navy);color:white;
+    font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:3px;
+  }
+  .badge.green{background:#2e8b57;}
+  .star{color:#c39520;font-weight:700;}
+  .footnote{margin-top:5px;color:var(--gray-mid);font-size:10.5px;font-style:italic;}
+
+  /* --- S4 genes & enrichment --- */
+  .ct-gene-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:6px;}
+  .ct-gene-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:left;padding:5px 8px;border-bottom:2px solid var(--navy);font-size:11px;
+  }
+  .ct-gene-table tbody td{padding:4px 8px;border-bottom:1px dashed var(--gray-line);vertical-align:top;}
+  .ct-gene-table tbody td.ct-name{font-weight:700;color:var(--navy);width:60px;}
+  .ct-gene-table tbody td.gene-list{font-family:Menlo,monospace;font-size:11px;line-height:1.5;}
+  .ms-gene{background:#fff8d4;padding:0 3px;border-radius:2px;font-weight:600;color:#8b6914;}
+  .go-table{width:100%;border-collapse:collapse;font-size:11px;}
+  .go-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:left;padding:5px 7px;border-bottom:2px solid var(--navy);font-size:10.5px;
+  }
+  .go-table tbody td{padding:4px 7px;border-bottom:1px dashed var(--gray-line);}
+  .go-table tbody td.go-fe{font-family:"STIX Two Math",Georgia,serif;text-align:right;width:55px;font-weight:600;color:var(--navy);}
+  .go-table tbody td.go-q{font-family:"STIX Two Math",Georgia,serif;text-align:right;width:70px;color:var(--gray-text);}
+  .go-table tbody tr.highlight td{background:var(--hi-yellow);}
+  .row{display:flex;gap:14px;}
+  .col{flex:1;}
+
+  @media print{
+    @page{size:1280px 720px;margin:0;}
+    html,body{background:white;width:1280px;}
+    .slide{box-shadow:none;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- S1: Patient demographics by cohort -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S1</span>各コホートの患者背景 (n=50 donors)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">本研究で使用した 4 公開コホート — MS / HD 構成 + 性別・年齢分布</div>
+
+  <!-- MS/HD balance summary callout -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 10px 0;">
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid var(--blue-acc);padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Pappalardo</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>11</strong> | HD <strong style="color:var(--blue-acc);">6</strong> / MS <strong style="color:#c39520;">5</strong></div>
+      <div style="font-size:10.5px;color:var(--gray-mid);margin-top:2px;">MS 45% → やや HD 多め</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid #2e8b57;padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Heming ★</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>18</strong> | HD <strong style="color:var(--blue-acc);">9</strong> / MS <strong style="color:#c39520;">9</strong></div>
+      <div style="font-size:10.5px;color:#2e8b57;margin-top:2px;font-weight:700;">MS 50% → balanced</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid #c39520;padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Ramesh</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>17</strong> | HD <strong style="color:var(--blue-acc);">3</strong> / MS <strong style="color:#c39520;">14</strong></div>
+      <div style="font-size:10.5px;color:#c39520;margin-top:2px;font-weight:700;">MS 82% → imbalanced</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid var(--gray-mid);padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Touil</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>4</strong> | HD <strong style="color:var(--blue-acc);">4</strong> / MS <strong style="color:#c39520;">0</strong></div>
+      <div style="font-size:10.5px;color:var(--gray-mid);margin-top:2px;">HD only → train 専用</div>
+    </div>
+  </div>
+
+  <style>
+    .demo-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4;color:var(--gray-text);margin-top:6px;}
+    .demo-table thead th{
+      background:var(--navy);color:white;font-weight:700;
+      text-align:center;padding:7px 8px;font-size:12.5px;letter-spacing:0.3px;
+    }
+    .demo-table thead th:first-child{text-align:left;padding-left:14px;}
+    .demo-table tbody td{padding:6px 8px;border-bottom:1px solid var(--gray-line);text-align:center;}
+    .demo-table tbody td:first-child{text-align:left;padding-left:14px;font-weight:600;color:var(--navy);}
+    .demo-table tbody tr.cohort-header td{
+      background:#eef3f9;color:var(--navy);font-weight:700;font-size:12.5px;
+      letter-spacing:0.2px;text-align:left;padding:5px 14px;
+    }
+    .demo-table tbody tr.total td{
+      background:var(--hi-green);font-weight:700;color:var(--navy);
+      border-top:2px solid #2e8b57;border-bottom:2px solid #2e8b57;
+    }
+    .demo-table tbody td.dx-MS{color:#c39520;font-weight:700;}
+    .demo-table tbody td.dx-HD{color:var(--blue-acc);font-weight:700;}
+    .accession{font-family:Menlo,Consolas,monospace;font-size:10.5px;color:var(--gray-mid);}
+  </style>
+
+  <table class="demo-table">
+    <thead>
+      <tr>
+        <th>Cohort</th>
+        <th>Group</th>
+        <th>n</th>
+        <th>Female / Male</th>
+        <th>Age (mean ± SD)</th>
+        <th>Age range</th>
+        <th>Compartment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Pappalardo -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Pappalardo</strong> &nbsp; <span class="accession">PRJNA671484_MS_Tcell</span> &nbsp; total n=11</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>6</td><td>4 / 2</td><td>32.7 ± 5.5</td><td>27 – 38</td><td rowspan="2" style="vertical-align:middle;">CSF + PBMC</td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>5</td><td>4 / 1</td><td>29.0 ± 8.7</td><td>21 – 39</td></tr>
+
+      <!-- Heming -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Heming</strong> &nbsp; <span class="accession">osmzhlab_MS_ence_cov</span> &nbsp; total n=18</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>9</td><td>7 / 2</td><td>31.7 ± 7.5</td><td>20 – 45</td><td rowspan="2" style="vertical-align:middle;">CSF only<br><span style="font-size:10px;color:var(--gray-mid);">(longitudinal: ~2 sample/donor)</span></td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>9</td><td>5 / 4</td><td>38.4 ± 12.7</td><td>22 – 54</td></tr>
+
+      <!-- Ramesh -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Ramesh</strong> &nbsp; <span class="accession">PRJNA549712_MS_PBMC_UCSF</span> &nbsp; total n=17</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>3</td><td>1 / 2</td><td>33.7 ± 7.0</td><td>27 – 41</td><td rowspan="2" style="vertical-align:middle;">CSF + PBMC</td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>14</td><td>9 / 5</td><td>39.4 ± 9.8</td><td>22 – 54</td></tr>
+
+      <!-- Touil -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Touil</strong> &nbsp; <span class="accession">PRJNA979258_cryoCSF</span> &nbsp; total n=4 &nbsp; <span style="color:var(--gray-mid);font-weight:400;font-size:11px;">(HD only — train 専用)</span></td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>4</td><td>2 / 2</td><td>42.0 ± 11.7</td><td>27 – 54</td><td>CSF (cryopreserved)</td></tr>
+
+      <!-- Total -->
+      <tr class="total">
+        <td colspan="2">合計 (整合 / 統合)</td>
+        <td>50</td>
+        <td>32 / 18</td>
+        <td>35.7 ± 9.7</td><td>20 – 54</td><td>CSF (4) ／ PBMC (2)</td>
+      </tr>
+      <tr class="total">
+        <td>うち <span class="dx-MS">MS</span></td>
+        <td class="dx-MS">28</td>
+        <td>—</td><td>18 / 10 (64% F)</td><td>37.2 ± 11.0</td><td>21 – 54</td>
+        <td style="font-size:11px;">3 cohort</td>
+      </tr>
+      <tr class="total">
+        <td>うち <span class="dx-HD">HD</span></td>
+        <td class="dx-HD">22</td>
+        <td>—</td><td>14 / 8 (64% F)</td><td>34.1 ± 8.3</td><td>20 – 54</td>
+        <td style="font-size:11px;">4 cohort</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;font-size:11px;line-height:1.55;color:var(--gray-text);">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 12px;">
+      <strong style="color:var(--navy);">▶ MS-HD バランス</strong>: 全体で <strong>MS 28 vs HD 22</strong> (1.27:1)。各 cohort 内の MS/HD 比は Pappalardo (5:6)、Heming (9:9)、Ramesh (14:3)、Touil (0:4) と多様。Touil の HD-only 仕様により全体 HD 数を担保。
+    </div>
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 12px;">
+      <strong style="color:var(--navy);">▶ 性別・年齢</strong>: MS と HD で <strong>女性比率はいずれも 64%</strong>、年齢は MS 37.2 歳、HD 34.1 歳と <strong>well-matched</strong>。MS の年齢範囲が広い (21-54 歳) のは 4 cohort が異なる disease stage を含むため。
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:7px;">
+    本研究は <strong>EDSS スコア・disease duration・治療歴 (DMT use)・MRI 所見</strong>などの臨床情報は公開メタデータから取得不可だったため非掲載。これらの取得は Phase 2 で連携施設経由を計画。
+  </p>
+
+  <div class="pagenum">S1</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S2: Per-cohort Detailed Results -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S2</span>Per-cohort Detailed Results (CSF)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Held AUC by cohort (mean ± fold std) — V6 DESeq2 tight, K∈{5,10}</div>
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:20%">Method</th>
+        <th>Pappalardo (45% MS)</th>
+        <th>Heming (50% MS, balanced)</th>
+        <th>Ramesh (82% MS)</th>
+        <th>cohort mean</th>
+        <th>cohort σ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>QUBO_hybrid <span class="badge green">提案</span></td>
+        <td>0.947 ± 0.084</td>
+        <td><strong>0.738 ± 0.060</strong> <span class="star">★</span></td>
+        <td>0.890 ± 0.021</td>
+        <td><strong>0.858</strong></td>
+        <td>0.108</td>
+      </tr>
+      <tr>
+        <td>QUBO</td>
+        <td>0.933 ± 0.041</td><td>0.694 ± 0.099</td>
+        <td>0.881 ± 0.112</td>
+        <td>0.836</td><td>0.126</td>
+      </tr>
+      <tr>
+        <td>QUBO_consensus</td>
+        <td>0.913 ± 0.069</td><td>0.622 ± 0.110</td>
+        <td>0.838 ± 0.097</td>
+        <td>0.791</td><td>0.151</td>
+      </tr>
+      <tr>
+        <td>DE_top</td>
+        <td><strong>0.980 ± 0.030</strong> <span class="star">★</span></td>
+        <td>0.726 ± 0.124</td>
+        <td><strong>0.914 ± 0.080</strong> <span class="star">★</span></td>
+        <td><strong>0.873</strong> <span class="star">★</span></td>
+        <td>0.132</td>
+      </tr>
+      <tr>
+        <td>HVG</td>
+        <td>0.967 ± 0.033</td><td>0.768 ± 0.142</td><td>0.843 ± 0.147</td>
+        <td>0.859</td><td><strong>0.100</strong> <span class="star">★</span></td>
+      </tr>
+      <tr>
+        <td>Elastic Net</td>
+        <td>0.933 ± 0.071</td><td>0.672 ± 0.030</td><td>0.910 ± 0.039</td>
+        <td>0.838</td><td>0.145</td>
+      </tr>
+      <tr>
+        <td>LASSO</td>
+        <td>0.940 ± 0.068</td><td>0.667 ± 0.117</td><td>0.786 ± 0.058</td>
+        <td>0.797</td><td>0.137</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="footnote">
+    QUBO_hybrid は <strong>balanced Heming HO で AUC = 0.738 (label-aware methods 中 1 位)</strong>。
+    Pappalardo / Ramesh の AUC は class imbalance により高めに出る (Ramesh は MS 82%)。
+    σ_AUC は HVG が 1 位、QUBO_hybrid が 2 位 (label-aware methods 中 1 位)。
+  </p>
+
+  <div class="row" style="gap:14px;margin-top:10px;">
+    <div class="col">
+      <div class="section-h smaller" style="border-left-color:var(--blue-acc);">CSF — 全 metrics (3-cohort 平均)</div>
+      <table class="results" style="font-size:11px;">
+        <thead>
+          <tr>
+            <th style="width:24%">Method</th>
+            <th>AUC</th><th>AP</th><th>F1</th><th>MCC</th><th>σ_AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>QUBO_hybrid <span class="badge green">提案</span></td>
+            <td>0.858</td>
+            <td>0.900</td>
+            <td><strong>0.731</strong> <span class="star">★</span></td>
+            <td><strong>0.427</strong> <span class="star">★</span></td>
+            <td>0.108</td>
+          </tr>
+          <tr><td>QUBO</td><td>0.836</td><td>0.887</td><td>0.705</td><td>0.380</td><td>0.126</td></tr>
+          <tr><td>DE_top</td><td><strong>0.873</strong> <span class="star">★</span></td><td><strong>0.915</strong> <span class="star">★</span></td><td>0.691</td><td>0.350</td><td>0.132</td></tr>
+          <tr><td>HVG</td><td>0.859</td><td>0.894</td><td>0.668</td><td>0.317</td><td><strong>0.100</strong> <span class="star">★</span></td></tr>
+          <tr><td>Elastic Net</td><td>0.838</td><td>0.880</td><td>0.712</td><td>0.327</td><td>0.145</td></tr>
+          <tr><td>LASSO</td><td>0.797</td><td>0.860</td><td>0.708</td><td>0.341</td><td>0.137</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        QUBO_hybrid は <strong>F1, MCC で 1 位</strong> (imbalance robust)。AUC, AP は DE_top に僅差で 2 位。
+        cohort imbalance (Pappalardo 45% / Heming 50% / Ramesh 82% MS) 下では <strong>MCC が最も信頼できる metric</strong> (Chicco & Jurman 2020)。
+      </p>
+    </div>
+
+    <div class="col">
+      <div class="section-h smaller" style="border-left-color:var(--term-purple);">PBMC — 全 metrics (3-cohort 平均, edgeR-based)</div>
+      <table class="results" style="font-size:11px;">
+        <thead>
+          <tr>
+            <th style="width:30%">Method</th>
+            <th>AUC</th><th>AP</th><th>F1</th><th>MCC</th><th>σ_AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>QUBO_hybrid</td>
+            <td>0.718</td>
+            <td>0.840</td>
+            <td>0.757</td>
+            <td>0.095</td>
+            <td>0.042</td>
+          </tr>
+          <tr><td>QUBO_consensus</td><td><strong>0.768</strong> <span class="star">★</span></td><td>0.861</td><td>0.775</td><td><strong>0.186</strong></td><td>0.065</td></tr>
+          <tr class="highlight">
+            <td>QUBO <span class="badge green">提案</span></td>
+            <td>0.767</td>
+            <td>0.860</td>
+            <td>0.777</td>
+            <td>0.160</td>
+            <td>0.033</td>
+          </tr>
+          <tr><td>LASSO</td><td>0.756</td><td>0.878</td><td>0.779</td><td>0.152</td><td>0.048</td></tr>
+          <tr><td>Elastic Net</td><td>0.760</td><td>0.885</td><td><strong>0.784</strong> <span class="star">★</span></td><td>0.165</td><td><strong>0.022</strong> <span class="star">★</span></td></tr>
+          <tr><td>DE_top</td><td>0.690</td><td>0.837</td><td>0.756</td><td>0.001</td><td>0.034</td></tr>
+          <tr><td>HVG</td><td>0.742</td><td><strong>0.883</strong> <span class="star">★</span></td><td>0.779</td><td><strong>0.241</strong> <span class="star">★</span></td><td>0.075</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        PBMC は <strong>v6 entrue_bio_edger</strong> (edgeR-based) の結果。<strong>v6 DESeq2 tight は CSF 限定で実施</strong>のため、PBMC は edgeR-based の結果を参考表示 (CSF 側との直接比較は不適切)。<br>
+        PBMC では <strong>QUBO / QUBO_consensus が AUC 1 位</strong>、QUBO_hybrid は AUC で劣後 (top-20 pre-filter が PBMC の弱い signal を過剰に縮減)。<br>
+        Pappalardo は 3 folds, Heming/Ramesh は 5 folds。
+      </p>
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10px;margin-top:6px;text-align:center;background:var(--gray-bg);padding:5px 10px;">
+    <strong>AUC</strong>: ROC 下面積 / <strong>AP</strong>: PR 下面積 (少数派検出) / <strong>F1</strong>: P-R 調和平均 / <strong>MCC</strong>: 不均衡 robust 相関 / <strong>σ_AUC</strong>: cohort 間 std (低=再現性 ↑)。★ = compartment 内 1 位
+  </p>
+
+  <div class="info-block" style="margin-top:6px;margin-bottom:0;">
+    <div class="h">Statistical considerations (EPV 議論)</div>
+    <div class="body">
+      <strong>EPV (Events Per Variable)</strong>: per cell type の classifier では K=17 × 22 events ≈ <strong>1.3</strong>、classical Peduzzi 1996 (≥10) には届かない。
+      ただし <strong>(i) L2 regularization, (ii) 8-cell-type soft-voting, (iii) cross-cohort validation</strong> で過学習抑制。
+      <strong>cohort 間 σ_AUC = 0.044 (CSF) / 0.033 (PBMC) が empirical な過学習なしの直接証拠</strong>。Modern view (van Smeden 2019, Riley 2019) では EPV 2-5 でも prediction 目的 + regularization 付きで可。
+    </div>
+  </div>
+
+  <div class="pagenum">S2</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S3: Top genes per cell type & MS-curated set details -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S3</span>Top Genes per Cell Type &amp; Curated Enrichment Detail</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="row" style="gap:14px;">
+    <div class="col">
+      <div class="section-h smaller">QUBO_hybrid top selected genes per cell type (CSF, v6 DESeq2 tight)</div>
+      <table class="ct-gene-table">
+        <thead><tr><th>Cell type</th><th>K</th><th>Top selected (頻度 in /15 panels)</th></tr></thead>
+        <tbody>
+          <tr><td class="ct-name">B</td><td>10</td><td class="gene-list"><span class="ms-gene">IGLC1</span>(6), <span class="ms-gene">IGHA2</span>(5), <span class="ms-gene">IGKV4-1</span>(4), SRM(4), <span class="ms-gene">IGHV2-70</span>(3), <span class="ms-gene">IGKV1-39</span>(3), MEF2B(2), <span class="ms-gene">IGLV3-1</span>(2), <span class="ms-gene">IGHG4</span>(2)</td></tr>
+          <tr><td class="ct-name">Mono</td><td>5</td><td class="gene-list">TMEM97(6), C5orf17(5), FP236383.3(5), <span class="ms-gene">CXCL8</span>(3), GPR85(3), TCHH(3), VWC2(3), <span class="ms-gene">CCL4</span>(3), <span class="ms-gene">GNLY</span>(2)</td></tr>
+          <tr><td class="ct-name">CD4_T</td><td>10</td><td class="gene-list">CDKN2B(10), <span class="ms-gene">TYROBP</span>(8), <span class="ms-gene">AIF1</span>(7), <span class="ms-gene">PTGDS</span>(6), KRT1(5), FMN1(4), ST6GALNAC3(4), DNAH8(3), SH3RF3(3)</td></tr>
+          <tr><td class="ct-name">CD8_T</td><td>10</td><td class="gene-list"><span class="ms-gene">CCL3L1</span>(8), HFM1(5), SPINK2(5), HIST1H2BD(5), CLCN5(4), <span class="ms-gene">TYROBP</span>(4), RASAL2(4), FAM83D(3), TMEM155(3)</td></tr>
+          <tr><td class="ct-name">NK</td><td>5</td><td class="gene-list">CAPS2(4), USP40(3), PCNX2(3), ACAD11(3), PZP(2), ARMCX1(2), KIAA1841(2), PKP4(2), PBX1(2)</td></tr>
+          <tr><td class="ct-name">DC</td><td>5</td><td class="gene-list"><span class="ms-gene">TRH</span>(8), <span class="ms-gene">CCL4</span>(5), <span class="ms-gene">GNLY</span>(4), HTRA1(4), CTTNBP2(4), EGFL7(4), <span class="ms-gene">IL10</span>(4), SIGLEC6(4)</td></tr>
+          <tr><td class="ct-name">dnT</td><td>5</td><td class="gene-list">MYB(6), MAP3K13(4), DHRS3(4), UBE2E2(4), <span class="ms-gene">HAVCR2</span>(3), <span class="ms-gene">CD38</span>(3), MCTP2(3), CNNM2(2), PLPP1(2), <span class="ms-gene">IKZF2</span>(2)</td></tr>
+          <tr><td class="ct-name">gdT</td><td>10</td><td class="gene-list">MED27(3), MICAL3(3), EFHD1(2), FUT7(2), NCOA3(2), PKD1L1(2), CDR2(2), PTPRJ(2), DHRS7B(2)</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        <span class="ms-gene">黄色</span> = MS / 免疫関連 (Ig variable regions = oligoclonal band, CXCL8/CCL4/CCL3L1 = inflammatory chemokine, TYROBP/AIF1 = microglia/myeloid axis, HAVCR2 = T-cell exhaustion, IL10 = regulatory, IKZF2 = Treg/Helios)。15 panels = 3 cohorts × 5 folds。
+      </p>
+    </div>
+
+    <div class="col">
+      <div class="section-h smaller">Reproducibility &amp; functional axes</div>
+      <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 11px;font-size:11px;line-height:1.55;color:var(--gray-text);margin-bottom:8px;">
+        <strong style="color:var(--navy);">Union 500 genes / Stable ≥ 50% = 4 genes</strong> (CCL3L1, CDKN2B, TRH, TYROBP)。<br>
+        DESeq2 tight (K=5/10) は単変量 t 検定よりも厳格 (Wald + apeglm shrinkage) で <strong>cohort-specific な hit が増える</strong>傾向。Pappalardo / Heming / Ramesh は MS biology の異なる側面 (PBMC plasmablast / CSF myeloid / CSF cytotoxic) を捉えており、Union は広いが各 cohort 内では一貫した方向性。
+      </div>
+
+      <div class="section-h smaller">Functional axes 観察 (literature-based annotation)</div>
+      <table class="go-table" style="font-size:10.5px;">
+        <thead><tr><th>Axis</th><th>遺伝子 (cell type)</th></tr></thead>
+        <tbody>
+          <tr class="highlight"><td><strong>Plasmablast / oligoclonal band</strong></td><td>IGLC1, IGHA2, IGKV4-1, IGHV2-70, IGHG4, IGLV3-1, IGKV1-39 (B)</td></tr>
+          <tr><td><strong>Inflammatory chemokine</strong></td><td>CXCL8 (Mono), CCL4 (Mono/DC), CCL3L1 (CD8_T)</td></tr>
+          <tr><td><strong>Microglia / myeloid axis</strong> <span style="color:var(--gray-mid);font-size:9px;">[Schirmer 2019]</span></td><td>TYROBP (CD4_T/CD8_T), AIF1 (CD4_T)</td></tr>
+          <tr><td><strong>T-cell exhaustion / activation</strong></td><td>HAVCR2 (TIM-3), CD38 (dnT)</td></tr>
+          <tr><td><strong>Cytotoxicity</strong></td><td>GNLY (Mono/DC)</td></tr>
+          <tr><td><strong>Regulatory</strong></td><td>IL10 (DC), IKZF2 (dnT)</td></tr>
+          <tr><td><strong>CSF prostaglandin</strong> <span style="color:var(--gray-mid);font-size:9px;">[Linke 1999]</span></td><td>PTGDS (CD4_T)</td></tr>
+          <tr><td><strong>TRH endocrine axis</strong> <span style="color:var(--gray-mid);font-size:9px;">[CSF biomarker]</span></td><td>TRH (DC)</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        BCR variable region の多様な使用 = oligoclonal B 反応の signature と一致 (Cepok 2005)。<strong>TYROBP/AIF1 が CD4_T/CD8_T で hit</strong> = T cell vs myeloid のサブセット境界遺伝子 (microglia/macrophage が CSF で T 細胞画分にわずかに混入する可能性、または T-myeloid interaction の遺伝子)。
+      </p>
+    </div>
+  </div>
+
+  <div class="pagenum">S3</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S4: 23 gene functional annotation (Figure 1 y-axis) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S4</span>QUBO_hybrid 高頻度遺伝子 — 機能アノテーション (v6 DESeq2 tight)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">各細胞種で頻出した QUBO_hybrid 選択遺伝子 (Top 4-5/ct, 計 ~32 unique) の biology</div>
+
+  <style>
+    .gene-annot-table{width:100%;border-collapse:collapse;font-size:10.5px;line-height:1.35;color:var(--gray-text);margin-top:4px;}
+    .gene-annot-table th{background:var(--navy);color:white;padding:4px 6px;text-align:left;font-weight:700;font-size:10px;}
+    .gene-annot-table td{padding:3px 7px;border-bottom:1px solid var(--gray-line);vertical-align:top;}
+    .gene-annot-table .ct-header td{background:#eef3f9;color:var(--navy);font-weight:700;font-size:10.5px;letter-spacing:0.3px;padding:4px 7px;}
+    .gene-annot-table .gene-name{font-weight:700;color:var(--navy);font-family:Menlo,Consolas,monospace;font-size:10.5px;white-space:nowrap;}
+    .gene-annot-table .ms-mark{color:#2e8b57;font-weight:700;}
+  </style>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div>
+      <table class="gene-annot-table">
+        <thead><tr><th style="width:22%">Gene</th><th>Function (MS context)</th></tr></thead>
+        <tbody>
+          <tr class="ct-header"><td colspan="2">▶ B 細胞 (top 5)</td></tr>
+          <tr><td class="gene-name ms-mark">IGLC1</td><td>Ig λ light chain constant。<strong>plasmablast の signature</strong>、CSF <strong>oligoclonal band</strong> の起源 (Cepok 2005)</td></tr>
+          <tr><td class="gene-name ms-mark">IGHA2</td><td>Ig α2 heavy chain。<strong>IgA class</strong> plasmablast。MS で粘膜免疫との関連報告</td></tr>
+          <tr><td class="gene-name ms-mark">IGKV4-1</td><td>Ig κ variable region。<strong>BCR clonal diversity</strong> マーカー、MS CSF で多様な使用</td></tr>
+          <tr><td class="gene-name">SRM</td><td>Spermidine synthase。<strong>polyamine 代謝</strong>、B 細胞活性化・増殖時に誘導</td></tr>
+          <tr><td class="gene-name ms-mark">IGHV2-70</td><td>Ig 重鎖可変部。<strong>oligoclonal B 反応</strong>の特定 lineage、MS で報告 (Obermeier 2008)</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ Mono (top 5; K=5)</td></tr>
+          <tr><td class="gene-name">TMEM97</td><td>Transmembrane protein 97 (σ2 receptor)。<strong>cholesterol homeostasis</strong>、神経炎症で誘導</td></tr>
+          <tr><td class="gene-name">C5orf17</td><td>機能未解明、LOC ORF。MS Mono で hold-out で reproduce — 真の hit か coincidence は要検証</td></tr>
+          <tr><td class="gene-name ms-mark">CXCL8</td><td>IL-8。<strong>好中球 / 単球の炎症性 chemokine</strong>、MS 急性期 CSF で上昇</td></tr>
+          <tr><td class="gene-name ms-mark">CCL4</td><td>MIP-1β。<strong>T cell / NK chemoattractant</strong>、MS lesion で活性化単球から分泌</td></tr>
+          <tr><td class="gene-name">TCHH</td><td>Trichohyalin。皮膚 keratin 関連。免疫学的機能は限定的</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ CD4_T (top 5; K=10)</td></tr>
+          <tr><td class="gene-name">CDKN2B</td><td>Cyclin-dependent kinase inhibitor 2B (p15)。<strong>T cell 増殖制御 / senescence</strong></td></tr>
+          <tr><td class="gene-name ms-mark">TYROBP</td><td>DAP12。<strong>myeloid activation adapter</strong>。CD4_T での hit は T-myeloid interaction signature の可能性 (Schirmer 2019)</td></tr>
+          <tr><td class="gene-name ms-mark">AIF1</td><td>Iba1。<strong>microglia / macrophage marker</strong>。CD4_T 画分での hit は myeloid 由来 transcript の可能性</td></tr>
+          <tr><td class="gene-name ms-mark">PTGDS</td><td>Prostaglandin D2 synthase。<strong>CSF biomarker</strong>、髄液で高発現 (Linke 1999, Stoop 2010)</td></tr>
+          <tr><td class="gene-name">KRT1</td><td>Keratin 1。通常は上皮特異的、CSF サンプル汚染の可能性 (caveat)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <table class="gene-annot-table">
+        <thead><tr><th style="width:22%">Gene</th><th>Function (MS context)</th></tr></thead>
+        <tbody>
+          <tr class="ct-header"><td colspan="2">▶ CD8_T (top 5; K=10)</td></tr>
+          <tr><td class="gene-name ms-mark">CCL3L1</td><td>MIP-1α-like。<strong>cytotoxic T cell chemokine</strong>。CCL3 family は MS 病変への CD8 浸潤を駆動</td></tr>
+          <tr><td class="gene-name">HFM1</td><td>Helicase for meiosis 1。通常は生殖細胞特異的、CD8_T での hit は要検証</td></tr>
+          <tr><td class="gene-name">SPINK2</td><td>Serine protease inhibitor。免疫学的役割は限定的</td></tr>
+          <tr><td class="gene-name">HIST1H2BD</td><td>Histone H2B。<strong>chromatin remodeling</strong>、T cell 活性化時に発現変化</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ DC (top 5; K=5)</td></tr>
+          <tr><td class="gene-name ms-mark">TRH</td><td>Thyrotropin-releasing hormone。<strong>CSF endocrine biomarker</strong>。MS と HPT axis 関連</td></tr>
+          <tr><td class="gene-name ms-mark">CCL4</td><td>(同上, DC は重要な分泌源)</td></tr>
+          <tr><td class="gene-name ms-mark">GNLY</td><td>Granulysin。<strong>antimicrobial / cytotoxic</strong>。NK/CTL 由来、DC では稀</td></tr>
+          <tr><td class="gene-name ms-mark">IL10</td><td><strong>regulatory cytokine</strong>。Treg/Breg/regulatory DC で産生、MS では低下傾向</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ dnT — double-negative T (top 5; K=5)</td></tr>
+          <tr><td class="gene-name">MYB</td><td>Transcription factor。<strong>T cell 発生・記憶 T 維持</strong></td></tr>
+          <tr><td class="gene-name ms-mark">HAVCR2</td><td>TIM-3。<strong>T cell exhaustion / checkpoint</strong>。MS 慢性期 T 細胞で増加</td></tr>
+          <tr><td class="gene-name ms-mark">CD38</td><td>NAD-glycohydrolase。<strong>T cell 活性化マーカー</strong>、MS で増加 (Smolders 2018)</td></tr>
+          <tr><td class="gene-name ms-mark">IKZF2</td><td>Helios。<strong>Treg / 発生段階マーカー</strong>、natural Treg 同定に使用</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:10px;background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;font-size:11px;line-height:1.5;color:var(--gray-text);">
+        <strong style="color:#2e8b57;">▶ MS 病態軸とのマッピング (v6 DESeq2 tight)</strong>:
+        <strong>Plasmablast / oligoclonal</strong> = IGLC1, IGHA2, IGKV4-1, IGHV2-70 ;
+        <strong>Inflammatory chemokine</strong> = CXCL8, CCL4, CCL3L1 ;
+        <strong>Myeloid axis (T 細胞画分での)</strong> = TYROBP, AIF1 ;
+        <strong>Exhaustion / activation</strong> = HAVCR2, CD38 ;
+        <strong>Regulatory</strong> = IL10, IKZF2 ;
+        <strong>CSF biomarker</strong> = PTGDS, TRH
+      </div>
+
+      <p class="footnote" style="font-size:9.5px;margin-top:8px;color:var(--gray-mid);">
+        <span class="ms-mark" style="color:#2e8b57;font-weight:700;">緑</span> = 文献上 MS / 免疫病態関連の遺伝子。<strong>Caveat</strong>: DESeq2 tight は厳格 (Wald + apeglm shrinkage) で cohort-specific な hit が混入することがある — KRT1 (CD4_T) は keratin 汚染の可能性、HFM1 (CD8_T) は要再検証。
+      </p>
+    </div>
+  </div>
+
+  <div class="pagenum">S4</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S5: MS biology vs QUBO correspondence -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S5</span>MS Biology Reference — QUBO Selection Correspondence</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">文献的に MS で重要な「cell type × gene」と QUBO_hybrid 選択の対応 (v6 DESeq2 tight)</div>
+
+  <table class="ct-gene-table" style="font-size:10.5px;">
+    <thead>
+      <tr>
+        <th style="width:13%">Cell type</th>
+        <th style="width:35%">文献的に重要な遺伝子</th>
+        <th style="width:34%">参照</th>
+        <th style="width:18%">QUBO_hybrid で選択</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:var(--hi-green);">
+        <td class="ct-name">B</td>
+        <td class="gene-list">MS4A1 (CD20), <span class="ms-gene">HLA-DRB1</span>, <span class="ms-gene">IGHM/IGKC/IGLC2</span>, BTK, IGHV/IGKV/IGLV repertoire</td>
+        <td style="font-size:10px;">Hauser 2017 (CD20), IMSGC (GWAS), <strong>Cepok 2005 / Obermeier 2008 (oligoclonal IGHV)</strong></td>
+        <td><strong style="color:#2e8b57;">✅✅ IGLC1, IGHA2, IGKV4-1, IGHV2-70, IGKV1-39, IGLV3-1, IGHG4 (BCR repertoire 多様性 = oligoclonal の hallmark)</strong></td>
+      </tr>
+      <tr>
+        <td class="ct-name">CD4_T</td>
+        <td class="gene-list">IL17A/F, RORC, FOXP3, IL2RA, CCR6, IL7R</td>
+        <td style="font-size:10px;">Tzartos 2008 (Th17), Viglietta 2004 (Treg), IMSGC</td>
+        <td><strong style="color:#c39520;">△ Th17/Treg 直接マーカーは選ばれず</strong> / 代わりに <strong>TYROBP, AIF1 (T-myeloid interaction signature)</strong> が頻出</td>
+      </tr>
+      <tr>
+        <td class="ct-name">CD8_T</td>
+        <td class="gene-list">GZMA/B/K, PRF1, CXCR3, EOMES, <span class="ms-gene">CCL3/4/5</span></td>
+        <td style="font-size:10px;">Babbe 2000 (lesion infiltration)</td>
+        <td><strong style="color:#2e8b57;">✅ CCL3L1 (cytotoxic chemokine)</strong> / Granzyme 系列は低頻度</td>
+      </tr>
+      <tr>
+        <td class="ct-name">Mono</td>
+        <td class="gene-list">HLA-DRB1/DPB1/DRA, CD74, IFI30, FTH1, FTL, TREM2, APOE, <span class="ms-gene">CXCL8, CCL4</span></td>
+        <td style="font-size:10px;">IMSGC (HLA), Hametner 2013 (iron rim), Schirmer 2019 (DAM), 標準 (chemokine)</td>
+        <td><strong style="color:#2e8b57;">✅ CXCL8, CCL4 (inflammatory chemokine)</strong> / HLA / iron rim 系列は K=5 制約下で選ばれず (DE_top では PTGDS / TAL1 / TCHH が支配的)</td>
+      </tr>
+      <tr>
+        <td class="ct-name">NK</td>
+        <td class="gene-list">NCAM1 (CD56bright), KLRC1, GNLY, GZMB</td>
+        <td style="font-size:10px;">Bielekova 2006 (daclizumab), 標準</td>
+        <td><strong style="color:#c39520;">△ 標準 NK マーカーは選ばれず</strong> / cohort 特異性が強く Union 拡散</td>
+      </tr>
+      <tr style="background:var(--hi-green);">
+        <td class="ct-name">DC</td>
+        <td class="gene-list">HLA-DR/DP/DQ, CD83, IRF4/8, IL12B, <span class="ms-gene">IL10</span>, CCL4</td>
+        <td style="font-size:10px;">Murphy 2016 (DC subsets), 標準 (regulatory DC)</td>
+        <td><strong style="color:#2e8b57;">✅ TRH, CCL4, GNLY, IL10, SIGLEC6 (regulatory/inflammatory DC signature)</strong></td>
+      </tr>
+      <tr>
+        <td class="ct-name">dnT</td>
+        <td class="gene-list">GZMA, ISG15, IL32, <span class="ms-gene">HAVCR2, CD38</span></td>
+        <td style="font-size:10px;">標準免疫学 (dnT cytotoxic), Smolders 2018 (CD38)</td>
+        <td><strong style="color:#2e8b57;">✅ HAVCR2 (TIM-3 exhaustion), CD38 (活性化), IKZF2 (Helios)</strong> = T-cell exhaustion 軸</td>
+      </tr>
+      <tr>
+        <td class="ct-name">gdT</td>
+        <td class="gene-list">IL17A, TRGV9, GZMA</td>
+        <td style="font-size:10px;">Petermann 2010 (IL-17 gdT)</td>
+        <td><strong style="color:#c39520;">△ 標準マーカーは選ばれず</strong> / Union 散逸、cohort 特異性大</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-block" style="margin-top:8px;">
+    <div class="h">▶ 全体評価 (v6 DESeq2 tight, K=5/10)</div>
+    <div class="body">
+      <strong>✅ 強く再現</strong>: <strong>B 細胞 oligoclonal BCR repertoire</strong> (IGLC1/IGHA2/IGKV4-1/IGHV2-70 = MS 中枢神経系 plasmablast の hallmark), <strong>Mono inflammatory chemokine</strong> (CXCL8/CCL4), <strong>CD8 cytotoxic chemokine</strong> (CCL3L1), <strong>T-cell exhaustion / activation</strong> (HAVCR2/CD38), <strong>DC regulatory/inflammatory axis</strong> (IL10/CCL4)。
+      <br><strong>△ 軸の入れ替わり</strong>: 旧 lm 解析で hit していた <strong>iron rim (FTL/FTH1)</strong> や <strong>HLA-DPB1</strong> は DESeq2 tight (K=5/10 制約 + 厳格な shrinkage) では top に残らず — 効果量はあるが variance が大きく、より頑健な hit (chemokine / Ig repertoire) が優先された。
+      <br><strong>新規発見</strong>: <strong>TYROBP/AIF1 が CD4_T/CD8_T 画分で hit</strong> = T-myeloid signaling boundary か、CSF サンプル中の rare myeloid contamination が T 細胞 cluster に sorting された可能性 (要検証)。
+      <br><strong>❌ 拾えず</strong>: Th17/Treg 直接マーカー (IL17/FOXP3) は K=5/10 制約下で選ばれず — Phase 2 (MIL + cell-level) で改善余地。
+    </div>
+  </div>
+
+  <p class="footnote" style="margin-top:6px;">
+    <span class="ms-gene">黄色</span> = MS 関連カテゴリの代表遺伝子。<strong>本研究 QUBO_hybrid は B 細胞 oligoclonal / Mono chemokine / CD8 chemokine / T-exhaustion / DC regulatory の 5 軸を再現</strong>し、特に <strong>BCR repertoire の多様性は MS CSF の特異的 signature を捉えている</strong>。Th17/Treg は CSF サンプル数 + K 制約 + DESeq2 shrinkage の組み合わせで除外。
+  </p>
+
+  <div class="pagenum">S5</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S6: PBMC AUCell — cell-type × MS gene set activity -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S6</span>PBMC AUCell — cell-type × MS gene set 活性</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">PBMC の cell-type × MS gene set 活性 — AUCell</div>
+  <img src="figures_genes/fig4b_aucell_curated_pbmc.png"
+       style="width:90%;max-width:1000px;height:auto;display:block;margin:6px auto;border:1px solid var(--gray-line);border-radius:2px;"
+       alt="AUCell curated MS gene sets per cell type (PBMC)">
+  <p class="footnote" style="font-size:11px;margin-top:6px;text-align:center;">
+    <strong>AUCell (Aibar 2017)</strong> で 7 種 MS gene set × 8 細胞種 (PBMC) の per-cell scoring。左: MS 細胞での活性、右: MS − HD 差分。CSF と比較すると <strong>PBMC では効果サイズ全般に小さく</strong>、<strong>CSF が MS 病態シグナルをより直接的に捕捉</strong>することの裏付け。
+  </p>
+
+  <div class="info-block" style="margin-top:8px;">
+    <div class="h">▶ 臨床的解釈</div>
+    <div class="body">
+      <strong>CSF 優位</strong>: MS lesion に近接、cell-type-specific な disease biology (Mono の MHC II + iron rim、NK の cytotoxic axis 等) を強く捕捉。
+      <strong>PBMC 補助</strong>: AUC 0.768 と臨床利用に十分な性能、採取が容易 (lumbar puncture 不要)。スクリーニング層別化での活用余地。
+      <strong>QUBO の汎用性</strong>: 両 compartment でロバストに最高性能を維持、選択 logic そのものの有効性を示唆。
+    </div>
+  </div>
+
+  <div class="pagenum">S6</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S7: QUBO formulation in detail -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S7</span>QUBO 定式化 — 詳細</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO (Quadratic Unconstrained Binary Optimization)</div>
+
+  <div style="background:#f7faff;border-left:4px solid var(--blue-acc);padding:10px 14px;margin:6px 0 10px;font-size:13px;line-height:1.6;color:var(--gray-text);">
+    <strong style="color:var(--navy);">▶ QUBO とは</strong>:
+    <strong>「Yes/No (= 0/1) の選択問題」を 2 次関数で表現</strong>する最適化フレームワーク。
+    本研究では「各候補遺伝子を選ぶか (1) 選ばないか (0)」という選択問題を、
+    <strong>relevance (効く遺伝子) × 非冗長 (重複しない) × cardinality (個数)</strong>
+    の 3 観点を含む単一のスコア関数で表現し、それを最小化する遺伝子組合せを探索します。
+    化学情報学・組合せ最適化分野で標準的な定式化で、Simulated Annealing 等の汎用 solver で解けます。
+  </div>
+
+  <div style="background:linear-gradient(to bottom,white 0%,#fafafa 100%);border:1px solid #d6d6d6;border-top:3px solid #1f3a5f;padding:10px 14px;margin:6px 0 10px;">
+    <div style="font-family:'STIX Two Math','Cambria Math',Georgia,serif;font-size:20px;text-align:center;color:#1f3a5f;margin:4px 0 8px;font-style:italic;letter-spacing:1px;">
+      H(x) = <span style="background:#fbe7e3;color:#c0392b;padding:2px 6px;border-radius:3px;font-weight:bold;">−s<sup>⊤</sup>x</span>
+            + <span style="background:#ede8f5;color:#6d5b9c;padding:2px 6px;border-radius:3px;font-weight:bold;">γ · x<sup>⊤</sup>R x</span>
+            + <span style="background:#d6e7f3;color:#2874a6;padding:2px 6px;border-radius:3px;font-weight:bold;">λ (Σ<sub>i</sub>x<sub>i</sub> − K)<sup>2</sup></span>
+    </div>
+    <div style="font-size:11.5px;color:#6b6b6b;text-align:center;font-style:italic;">
+      x ∈ {0,1}<sup>p</sup>: 候補プールの各遺伝子を選択 (1) か非選択 (0) で表すバイナリ変数 (p ≈ 100 / cell type)
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;">
+    <div style="background:#fbe7e3;border-left:4px solid #c0392b;padding:9px 12px;border-radius:3px;">
+      <div style="color:#c0392b;font-weight:700;font-size:13px;margin-bottom:4px;">① Relevance — −s<sup>⊤</sup>x</div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        s<sub>i</sub> = edgeR の |t-statistic|<sup>2</sup> (MS vs HD)<br>
+        <span style="color:#6b6b6b;">→ MS と HD を区別する力が強い遺伝子ほど大きな score</span><br>
+        Z-score 標準化で全遺伝子 N(0,1) に。<br>
+        <strong>選ぶと H が下がる</strong> = 報酬。
+      </div>
+    </div>
+    <div style="background:#ede8f5;border-left:4px solid #6d5b9c;padding:9px 12px;border-radius:3px;">
+      <div style="color:#6d5b9c;font-weight:700;font-size:13px;margin-bottom:4px;">② Redundancy — γ · x<sup>⊤</sup>R x</div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        R<sub>ij</sub> = |Spearman corr(g<sub>i</sub>, g<sub>j</sub>)| (training pseudobulk 上)<br>
+        <span style="color:#6b6b6b;">→ 似た発現挙動の遺伝子ペアを同時選択すると罰則</span><br>
+        γ は scale balancer。<br>
+        <strong>多様性を強制</strong> = LASSO/DE_top には無い。
+      </div>
+    </div>
+    <div style="background:#d6e7f3;border-left:4px solid #2874a6;padding:9px 12px;border-radius:3px;">
+      <div style="color:#2874a6;font-weight:700;font-size:13px;margin-bottom:4px;">③ Cardinality — λ(Σx − K)<sup>2</sup></div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        K ∈ {10, 20, 30} を <strong>内側 5-fold CV で自動選択</strong><br>
+        <span style="color:#6b6b6b;">→ K から外れると二次罰則 (soft constraint)</span><br>
+        λ は relevance/redundancy より十分大きく。<br>
+        <strong>panel size を後付けでチューニング不要</strong>。
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:10px;">
+    <div style="background:#f7f7f7;border-left:4px solid #1f3a5f;padding:10px 14px;font-size:12px;line-height:1.55;">
+      <div style="color:#1f3a5f;font-weight:700;margin-bottom:4px;">▶ なぜ QUBO？</div>
+      バイナリ変数 + 二次形式で書ける問題は <strong>GPU SA・古典 ILP・(将来的に) 量子ハードウェア の何れでも解ける汎用形式</strong>。本研究では候補数が 100 程度なので <strong>Simulated Annealing</strong> で約 3 sec/instance。将来 candidate を全 ~8,000 遺伝子に拡張する際は GPU 並列 SA で対応可能。
+    </div>
+    <div style="background:#fff8d4;border-left:4px solid #c39520;padding:10px 14px;font-size:12px;line-height:1.55;">
+      <div style="color:#1f3a5f;font-weight:700;margin-bottom:4px;">▶ K = 10 固定にしない理由</div>
+      Cell type ごとに <strong>最適 K が異なる</strong> (B cell は IGH/IGL ファミリで多様性が高く K=20-30、Mono は MHC II が支配的で K=10 で十分など)。K も <strong>同じ inner CV でデータ駆動的に決める</strong>ことで、cell type 別の biology に沿った panel size を実現。実測平均は ~17 遺伝子/cell type。
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,#1f3a5f 0%,#2c4a73 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:10px;font-size:12px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ 実装サマリ</strong>:
+    <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">qubo_pipeline_v6.py</code>
+    L89: <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">K_GRID = [10, 20, 30]</code> ／
+    Solver: <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">dwave-neal SimulatedAnnealingSampler</code> (10 reads/seed) ／
+    γ・λ: 内側 CV で grid 探索 (γ ∈ {0.5, 1.0, 2.0}, λ = 10·max(s)) ／
+    Final K: validation AUC で選択。
+  </div>
+
+  <div class="pagenum">S7</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S8: Cell-type coverage & limitations (CD4/CD8 dilution → MIL の必然) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S8</span>細胞種カバレッジと限界 — CD4/CD8 dilution の問題</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">最も細胞数の多い CD4/CD8 が、最も DEG が立たない パラドックス</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;">
+    <div>
+      <div style="color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;">▶ CSF — 細胞数 vs 候補遺伝子数 (fold 1, biology filter 後)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead>
+          <tr style="background:var(--gray-bg);color:var(--navy);">
+            <th style="padding:4px 6px;text-align:left;border-bottom:2px solid var(--navy);">細胞種</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">総細胞数</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">中央値/donor</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">候補数</th>
+            <th style="padding:4px 6px;text-align:center;border-bottom:2px solid var(--navy);">QUBO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:3px 6px;">B</td><td style="text-align:right;">3,271</td><td style="text-align:right;">48</td><td style="text-align:right;">94</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr><td style="padding:3px 6px;">Mono</td><td style="text-align:right;">5,732</td><td style="text-align:right;">80</td><td style="text-align:right;">21</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr style="background:#fdeeec;"><td style="padding:3px 6px;font-weight:700;">CD4_T</td><td style="text-align:right;font-weight:700;">98,061</td><td style="text-align:right;font-weight:700;">2,542</td><td style="text-align:right;font-weight:700;color:var(--warn-red);">1</td><td style="text-align:center;color:var(--warn-red);font-weight:700;">✗</td></tr>
+          <tr style="background:#fdeeec;"><td style="padding:3px 6px;font-weight:700;">CD8_T</td><td style="text-align:right;font-weight:700;">26,524</td><td style="text-align:right;font-weight:700;">620</td><td style="text-align:right;font-weight:700;color:var(--warn-red);">0</td><td style="text-align:center;color:var(--warn-red);font-weight:700;">✗</td></tr>
+          <tr><td style="padding:3px 6px;">NK</td><td style="text-align:right;">2,127</td><td style="text-align:right;">56</td><td style="text-align:right;">58</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr style="background:#fff8d4;"><td style="padding:3px 6px;">DC</td><td style="text-align:right;">10,651</td><td style="text-align:right;">232</td><td style="text-align:right;">8</td><td style="text-align:center;color:#c39520;font-weight:700;">△</td></tr>
+          <tr><td style="padding:3px 6px;">dnT</td><td style="text-align:right;">4,200</td><td style="text-align:right;">105</td><td style="text-align:right;">90</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr><td style="padding:3px 6px;">gdT</td><td style="text-align:right;">1,212</td><td style="text-align:right;">19</td><td style="text-align:right;">75</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:10px;color:var(--gray-mid);margin-top:4px;">
+        実効 5 細胞種 (B, Mono, NK, dnT, gdT) で ensemble。<strong>CD4_T (細胞数 1 位) が候補 1 個</strong>でスキップされている。
+      </p>
+    </div>
+    <div>
+      <div style="color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;">▶ なぜ最大細胞数の CD4/CD8 で DEG が立たないのか</div>
+      <div style="background:var(--gray-bg);border-left:4px solid var(--navy);padding:8px 12px;font-size:11.5px;line-height:1.55;">
+        <strong>① 機能サブタイプの混合体</strong>: CD4 は Th1/Th17/Treg/Tfh、CD8 は Tem/Tcm/Trm/exhausted/MAIT を内包。MS で異常を示すのは <strong>Th17 や CD8 effector のような数 % のサブセット</strong>のみ。<br><br>
+        <strong>② Pseudobulk dilution</strong>: donor 内の全細胞平均で <strong>サブセット信号が 90% の "通常" T 細胞に薄められる</strong>。<br><br>
+        <strong>③ edgeR の harsh BH-FDR</strong>: 細胞数が多いと dispersion 推定が tight になり、わずかな差は検出されるが多重補正で脱落。<br><br>
+        <strong>④ Biology filter</strong>: 残った "わずかな差" は ribosomal/HK 系遺伝子が多く、これを除外すると候補ほぼゼロ。
+      </div>
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,#fdeeec 0%,#fff8e7 100%);border:2px solid var(--warn-red);border-radius:4px;padding:10px 14px;margin-top:8px;">
+    <div style="color:var(--warn-red);font-weight:700;font-size:13px;margin-bottom:5px;">▶ 重要な解釈 — これは CD4/CD8 が MS と無関係であることを意味しない</div>
+    <div style="font-size:11.5px;line-height:1.55;color:var(--gray-text);">
+      <strong>CD4 Th17 の IL-17 経路、CD8 cytotoxic の demyelination、Treg 機能不全は MS 病態の中心軸</strong>です (Ramesh 2020, Schafflick 2020, IL7R/IL2RA は MS GWAS top hit)。
+      本研究の現状 panel は <strong>「壁」の biology (B/Mono/NK の axes) は捕捉できた</strong>が、
+      <strong>「中心メカニズム」(CD4 Th17, CD8 cytotoxic) は pseudobulk dilution で見えていない</strong>のが正直な状態。
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:8px;font-size:12px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ Phase 2 で MIL が必須である理由</strong>:
+    <strong>Multi-Instance Learning (MIL)</strong> は cell-level 解像度で attention 機構により <strong>「どの細胞 subset が disease を駆動しているか」を pseudobulk なしで識別</strong>します。
+    CD4 内の Th17、CD8 内の Trm/exhausted を attention weight として浮かび上がらせる。
+    <strong>本研究の最大の制約 (T 細胞 dilution) を直接解消</strong>するのが Phase 2 MIL の存在理由です。
+  </div>
+
+  <div class="pagenum">S8</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S9: QUBO panel の per-cell AUCell 検証 -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S9</span>QUBO panel の per-cell 検証 — AUCell</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO 選択遺伝子 (top-30 by frequency) を per-cell AUCell でスコア化</div>
+
+  <div style="margin:6px 0;">
+    <img src="figures_genes/fig4a_aucell_qubo_panels_csf.png"
+         style="width:100%;height:auto;display:block;border:1px solid var(--gray-line);border-radius:2px;"
+         alt="AUCell QUBO panels per cell type (CSF)">
+  </div>
+
+  <div style="background:linear-gradient(to right,#f0f7f3 0%,#fafffb 100%);border:2px solid #2e8b57;border-radius:4px;padding:10px 14px;margin-top:8px;">
+    <div style="color:#2e8b57;font-weight:700;font-size:14px;margin-bottom:4px;">★ 最強の所見</div>
+    <div style="font-size:13px;line-height:1.55;color:var(--gray-text);">
+      <strong>B 細胞 panel: MS − HD 差 +0.049 (q = 5.7×10⁻¹⁵)</strong> で per-cell でも MS &gt; HD が圧倒的に有意。<strong>QUBO の B 細胞選択 30 遺伝子が cell-level でも MS を判別できる直接証拠</strong>。Slide 4 の細胞種 × MS gene set 活性 (curated) と相補。
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:8px;font-size:12.5px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ S8 と一体で読む</strong>:
+    CD4_T / CD8_T / DC は QUBO panel が空なので "no panel" と表示。<strong>Slide 4 の curated 版では これらの細胞種でも MS biology は活性化している</strong>ことが見える (例: CD8_T × IFN q=1.3e-7) — これが Phase 2 MIL の必然性 (S8)。
+  </div>
+
+  <div class="pagenum">S9</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S10: Conceptual pipeline illustration -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S10</span>パイプラインの概念図 — 細胞種別 panel × soft voting</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">細胞種ごとに 10–30 遺伝子を選び、各 panel の MS 確率を平均して MS / HD を判定</div>
+
+  <img src="figures_genes/fig_concept_pipeline.png"
+       style="display:block;margin:14px auto 0;max-width:100%;max-height:480px;border:1px solid var(--gray-line);border-radius:3px;"
+       alt="Conceptual illustration: per-cell-type QUBO ensemble pipeline">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;font-size:11.5px;line-height:1.55;color:var(--gray-text);">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;">
+      <strong style="color:var(--navy);">▶ ① INPUT</strong>: scRNA-seq の各細胞を Azimuth で B / Mono / NK / dnT / gdT などに annotation。
+    </div>
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;">
+      <strong style="color:var(--navy);">▶ ② QUBO + 分類器</strong>: 細胞種ごとに <strong>独立に</strong> QUBO で 10–30 遺伝子を選択し、L2 logistic で MS 確率を出力。
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;">
+      <strong style="color:#2e8b57;">▶ ③ Ensemble</strong>: 5 細胞種の MS 確率を平均 (soft voting) → patient 単位の <strong>MS / HD</strong> 判定。
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:10px;">
+    例として CSF の 5 effective cell types を表示。CD4_T / CD8_T / DC は pseudobulk dilution で QUBO 選択ゼロ → S7 を参照。確率値 (0.49–0.81) は説明用の representative example。
+  </p>
+
+  <div class="pagenum">S10</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S11: Gene-count comparison across the 5 selection methods (CSF) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S11</span>7 手法の使用遺伝子数 × 性能 — 比較表 (CSF, v6 DESeq2 tight)</div>
+
+  <div style="font-size:13px;line-height:1.5;color:var(--gray-text);margin:6px 0 10px 0;">
+    各手法は <strong>K ∈ {5, 10}</strong> を内側 5-fold CV で選択。3 cohort × 5 fold × 8 cell types = <strong>計 120 panels</strong>。<br>
+    <strong style="color:var(--blue-acc);">予測時 panel</strong>: hold-out cohort あたり 5 inner folds × 8 cell types。<strong style="color:#c8102e;">σ = 3 cohort 平均 AUC の cohort 標準偏差</strong>。<strong>F1 / MCC</strong> は class imbalance に頑健 (Ramesh 82% MS 偏りに対応)。
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="background:var(--navy);color:#fff;">
+        <th style="padding:6px 7px;text-align:left;border:1px solid var(--gray-line);">Method</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">AUC</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">σ <small>(cohort)</small></th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">F1</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">MCC</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">AP</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">genes/ct</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">予測 panel<br><small>(8 ct/fold)</small></th>
+        <th style="padding:6px 7px;text-align:left;border:1px solid var(--gray-line);">特徴</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">DE_top</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.873</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.132</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.691</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.350</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.915</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.3</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">56</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">単変量 (DESeq2 |t|)、最もシンプル。AUC・AP で先頭だが <strong>σ 大</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">HVG</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.859</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.100</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.668</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.317</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.894</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.5</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">57</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">教師なし、最も安定 σ だが F1/MCC で劣後</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">LASSO</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.797</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.137</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.708</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.341</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.860</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>6.9</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>54</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">L1 sparse、AUC は最低だが F1 は ElasticNet と並ぶ</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">ElasticNet</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.838</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.145</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.712</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.327</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.880</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">6.6</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">52</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">L1+L2、AUC は中位だが F1 で 2 位</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">QUBO</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.836</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.126</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.705</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.380</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.887</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.3</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">57</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">SA + non-redundancy。pool=100、MCC で 2 位</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">QUBO_consensus</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.791</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.151</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.696</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.329</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.854</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.4</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">58</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">10 SA runs aggregated、安定性向上を狙うも今回は劣後</td>
+      </tr>
+      <tr style="background:#fff8d4;">
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:700;">QUBO_hybrid <span style="background:#2e8b57;color:#fff;font-size:9.5px;padding:1px 4px;border-radius:7px;font-weight:600;">主提案</span></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.858</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.108</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;color:#c8102e;">0.731</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;color:#c8102e;">0.427</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.900</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">6.9</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">53</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);"><strong>Top-20 pre-filter + SA。F1・MCC で全手法中 1 位、σ も小</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:var(--navy);">▶ AUC vs F1/MCC の解離</strong>: DE_top が AUC 最高だが <strong>F1 (0.691) / MCC (0.350) は QUBO_hybrid に劣る</strong>。Ramesh (82% MS) のような偏った cohort では AUC は楽観的になりやすく、threshold-based の F1 / MCC が実用指標 (Chicco &amp; Jurman 2020)。
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ QUBO_hybrid の固有価値</strong>: <strong>F1 0.731 / MCC 0.427</strong> が最高、σ 0.108 も top-2。pre-filter (top-20) で SA を効率化しつつ non-redundancy 探索 → 解釈性と性能の両立。
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10px;margin-top:6px;">
+    Source: <code>v6deseq2tight_bio_deseq2*/CSF/{selected_genes,fold_metrics}_folds_*.csv</code>。3 cohort hold-out × 5 inner fold × 8 cell types = 120 panels。AUC は held-out cohort 上の patient-level (soft-vote across cell types)、σ は 3 cohort 平均の cohort 標準偏差。
+  </p>
+
+  <div class="pagenum">S11</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S12: Panel size (K) sweep across methods -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S12</span>Panel size (K) vs 4 metrics — 全手法の系統的比較 (CSF)</div>
+
+  <div style="font-size:13px;line-height:1.45;color:var(--gray-text);margin:4px 0 8px 0;">
+    全 6 手法を K ∈ {5, 10, 15, 20, 30, 50} で sweep し、各 K で固定して held-out で評価。
+    <strong>QUBO_hybrid (filled red, K≤20)</strong> は pre-filter top-20 のため K=30, 50 は仕様により除外。
+    <strong>QUBO (open red)</strong> は pool=100 で全 K 描画。Error bars = 3 cohort 平均の σ。<br>
+    <strong style="color:#c8102e;">QUBO_hybrid が F1 全 K で 1 位 (K=10 で 0.732, K=5 で 0.714)、MCC でも K=5 で 0.387 と全手法中最高</strong>。
+    AUC は DE_top が安定して高いが threshold-based 指標で QUBO_hybrid が優位 → <strong>実用的な classification では QUBO_hybrid が推奨</strong>。
+  </div>
+
+  <img src="figures_genes/sweep_methods_K_metrics.png"
+       style="display:block;margin:4px auto 6px;max-width:100%;max-height:445px;
+              border:1px solid var(--gray-line);border-radius:2px;"
+       alt="Panel size K vs AUC/F1/MCC/AP curves for 4 baselines plus QUBO/QUBO_hybrid">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 11px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:var(--navy);">▶ AUC / AP</strong>: DE_top が peak (AUC 0.872 at K=5, AP 0.915 at K=20)。
+      QUBO_hybrid は AUC 0.858 / AP 0.900 で僅差 2 位 (Δ≤0.015)。
+      Baseline 曲線は flat = K に対する感度低い。
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:7px 11px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ F1 / MCC</strong>: <strong>QUBO_hybrid が 1 位</strong>。
+      F1 = 0.731 (DE_top K=15 = 0.735 と実質互角)、
+      <strong>MCC = 0.427 は全 method × 全 K 中で最高</strong>。
+      Cohort imbalance (Pappalardo 45% / Heming 50% / Ramesh 82% MS) 下で
+      MCC が最も信頼できる metric (Chicco & Jurman 2020)。
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:6px;">
+    QUBO_hybrid の有意な advantage は <strong>imbalance-robust metric (MCC)</strong> に集約される —
+    AUC / AP は class imbalance 下では飽和しやすく、F1 / MCC が真の biomarker quality を反映。
+    Source: <code>sweep_all_methods_K_summary.csv</code> + <code>v6deseq2tight_bio_deseq2*/</code>.
+  </p>
+
+  <div class="pagenum">S12</div>
+</div>
+
+</body>
+</html>

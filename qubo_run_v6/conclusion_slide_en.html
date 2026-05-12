@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Conclusion Slide</title>
+<style>
+  :root {
+    --navy: #1f3a5f; --navy-mid: #2c4a73; --blue-acc: #3a6db0;
+    --gray-text: #303030; --gray-mid: #6b6b6b; --gray-line: #d6d6d6;
+    --gray-bg: #f7f7f7; --hi-green: #e8f4ec; --hi-yellow: #fff8d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                 "Helvetica Neue", Arial, sans-serif;
+    background: #ddd; color: var(--gray-text); padding: 30px 0;
+  }
+  .slide {
+    width: 1280px; height: 720px; margin: 0 auto 40px;
+    background: white; padding: 36px 50px 28px;
+    position: relative; box-shadow: 0 4px 18px rgba(0,0,0,0.12);
+    overflow: hidden;
+  }
+  .pagenum { position: absolute; right: 30px; bottom: 14px; color: #999; font-size: 13px; }
+  .deco-squares { position: absolute; top: 36px; right: 50px; display: flex; gap: 6px; }
+  .deco-squares span { width: 11px; height: 11px; background: var(--gray-line); display: inline-block; }
+  .deco-squares span:last-child { background: var(--navy); }
+  .slide-label { color: var(--navy); font-size: 22px; font-weight: 700; margin-bottom: 12px; letter-spacing: 0.3px; }
+  .section-h {
+    color: var(--navy); font-size: 22px; font-weight: 700;
+    border-left: 6px solid var(--navy); padding-left: 14px;
+    margin-bottom: 16px; line-height: 1.3;
+  }
+  .takeaway-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;
+  }
+  .takeaway-card {
+    background: linear-gradient(to bottom right, #fafbfc 0%, #f0f4fa 100%);
+    border-left: 4px solid var(--navy); padding: 14px 18px;
+    border-radius: 2px; position: relative;
+  }
+  .takeaway-card.green { border-left-color: #2e8b57; background: linear-gradient(to bottom right, #f0f7f3 0%, #e8f4ec 100%); }
+  .takeaway-card.yellow { border-left-color: #c39520; background: linear-gradient(to bottom right, #fff8d4 0%, #fff4b8 100%); }
+  .takeaway-card.blue { border-left-color: var(--blue-acc); background: linear-gradient(to bottom right, #f0f4fa 0%, #d6e7f3 100%); }
+  .num-badge {
+    position: absolute; top: 10px; right: 12px;
+    background: var(--navy); color: white;
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .green .num-badge { background: #2e8b57; }
+  .yellow .num-badge { background: #c39520; }
+  .blue .num-badge { background: var(--blue-acc); }
+  .takeaway-title { color: var(--navy); font-weight: 700; font-size: 15px; margin-bottom: 6px; padding-right: 32px; }
+  .takeaway-body { font-size: 13px; line-height: 1.55; color: var(--gray-text); }
+  .takeaway-body strong { color: var(--navy); }
+  .key-number {
+    font-family: "STIX Two Math", Georgia, serif;
+    font-weight: 700; color: var(--navy); font-size: 17px;
+  }
+  .conclusion-banner {
+    background: linear-gradient(to right, var(--navy) 0%, var(--navy-mid) 100%);
+    color: white; padding: 18px 24px; border-radius: 4px; margin-top: 14px;
+  }
+  .conclusion-banner-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; letter-spacing: 0.3px; }
+  .conclusion-banner-body { font-size: 14px; line-height: 1.6; }
+  .conclusion-banner-body em { font-style: normal; color: #fff8d4; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="slide">
+  <div class="slide-label">Conclusion</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Take-home Messages</div>
+
+  <div class="takeaway-grid">
+    <!-- ① Performance -->
+    <div class="takeaway-card green">
+      <div class="num-badge">1</div>
+      <div class="takeaway-title">Performance — Wins on 4 of 5 metrics</div>
+      <div class="takeaway-body">
+        On CSF, QUBO achieved <span class="key-number">AUC 0.781 ± 0.041</span>,
+        <span class="key-number">F1 0.640</span>, and
+        <span class="key-number">MCC 0.297</span>.
+        It ranks <strong>first on AUC, F1, MCC, and σ_AUC (4 of 5 metrics)</strong>.
+        Loses only AP to LASSO (Δ 0.013).
+      </div>
+    </div>
+
+    <!-- ② Reproducibility -->
+    <div class="takeaway-card yellow">
+      <div class="num-badge">2</div>
+      <div class="takeaway-title">Cross-site reproducibility — lowest σ</div>
+      <div class="takeaway-body">
+        <strong>Cohort-to-cohort std of <span class="key-number">0.041</span> — the lowest
+        among all methods</strong> (LASSO 0.057, DE_top 0.065). All three independent cohorts
+        (Pappalardo / Heming / Ramesh) yielded held AUC within
+        <strong>0.74-0.82</strong>, demonstrating
+        <strong>"stable performance on unseen study sites."</strong>
+      </div>
+    </div>
+
+    <!-- ③ Biological validity -->
+    <div class="takeaway-card blue">
+      <div class="num-badge">3</div>
+      <div class="takeaway-title">Biological validity — Aligned with MS pathobiology</div>
+      <div class="takeaway-body">
+        Recurrently selected genes include <strong>HLA-DRB1, HLA-DPB1</strong> (top MS GWAS risk loci),
+        <strong>ISG15</strong> (Type I IFN), <strong>GZMA</strong> (cytotoxic T/NK),
+        and <strong>FTH1/FTL</strong> (iron metabolism).
+        GO pathway analysis: <strong>MHC class II antigen presentation</strong> enriched at
+        <span class="key-number">p &lt; 10⁻⁸</span>.
+      </div>
+    </div>
+
+    <!-- ④ Quantum compatibility -->
+    <div class="takeaway-card">
+      <div class="num-badge">4</div>
+      <div class="takeaway-title">Quantum-annealer compatible</div>
+      <div class="takeaway-body">
+        Formulated as a binary optimization, the same objective can be deployed on
+        <strong>D-Wave quantum annealers</strong> without modification. Classical SA already
+        runs in <strong>~3 s per instance</strong>, providing a
+        <strong>future-proof design</strong> that can seamlessly transition to quantum
+        hardware as it matures.
+      </div>
+    </div>
+  </div>
+
+  <!-- Conclusion banner -->
+  <div class="conclusion-banner">
+    <div class="conclusion-banner-title">Implication for Clinical Translation</div>
+    <div class="conclusion-banner-body">
+      QUBO simultaneously satisfies <em>"high mean AUC × lowest cohort variance × biological
+      validity × quantum-ready"</em>, positioning it as a strong candidate for
+      <em>cross-site-reproducible MS biomarker panels</em> in clinical translation.
+    </div>
+  </div>
+
+  <div class="pagenum">9</div>
+</div>
+
+</body>
+</html>

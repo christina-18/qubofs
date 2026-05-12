@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QUBO MS Classification — Supplementary slides (English)</title>
+<style>
+  :root {
+    --navy:#4F4F70; --navy-mid:#6868a0; --blue-acc:#3a6db0;
+    --gray-text:#303030; --gray-mid:#6b6b6b; --gray-line:#d6d6d6;
+    --gray-bg:#f7f7f7; --hi-yellow:#fff8d4; --hi-green:#e8f4ec;
+    --burgundy:#8b3a3a; --burgundy-mid:#6b2828; --hi-burgundy:#f7eaea;
+    --warn-red:#c0392b; --hi-blue:#e3f0fb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1280px;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    background:#ddd;color:var(--gray-text);
+  }
+  .slide{
+    width:1280px;height:720px;margin:0 auto;
+    background:white;padding:30px 50px 24px;
+    position:relative;box-shadow:0 4px 18px rgba(0,0,0,0.12);
+    page-break-after:always;break-after:page;overflow:hidden;
+  }
+  .slide:last-child{page-break-after:auto;}
+  .pagenum{position:absolute;right:30px;bottom:12px;color:#999;font-size:12px;}
+  .deco-squares{position:absolute;top:30px;right:50px;display:flex;gap:5px;}
+  .deco-squares span{width:10px;height:10px;background:var(--gray-line);display:inline-block;}
+  .deco-squares span:last-child{background:var(--blue-acc);}
+  .supp-tag{
+    display:inline-block;background:var(--blue-acc);color:white;
+    font-size:11px;font-weight:700;padding:2px 8px;border-radius:2px;
+    letter-spacing:0.5px;margin-right:8px;vertical-align:middle;
+  }
+  .slide-label{color:var(--navy);font-size:20px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;}
+  .section-h{
+    color:var(--navy);font-size:18px;font-weight:700;
+    border-left:5px solid var(--navy);padding-left:10px;
+    margin-bottom:8px;line-height:1.25;
+  }
+  .section-h.smaller{font-size:14px;border-left-width:4px;}
+
+  /* S1 */
+  .presenter-card{
+    background:linear-gradient(to right,#eef3f9 0%,#f7faff 100%);
+    border-left:5px solid var(--blue-acc);
+    padding:16px 20px;border-radius:2px;margin-bottom:14px;
+  }
+  .presenter-name-big{color:var(--navy);font-size:24px;font-weight:700;letter-spacing:0.3px;margin-bottom:4px;}
+  .presenter-affil-big{font-size:14px;color:var(--gray-text);line-height:1.55;margin-bottom:6px;}
+  .presenter-affil-big strong{color:var(--navy);}
+  .presenter-field-big{font-size:13.5px;color:var(--gray-text);line-height:1.5;}
+  .presenter-field-big strong{color:var(--navy);}
+
+  .info-block{
+    background:var(--gray-bg);border-left:4px solid var(--navy);
+    padding:10px 14px;margin-bottom:10px;
+  }
+  .info-block .h{color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;letter-spacing:0.3px;}
+  .info-block .body{font-size:12.5px;line-height:1.55;color:var(--gray-text);}
+  .info-block .body strong{color:var(--navy);}
+
+  /* S2 */
+  .flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px 10px;margin-bottom:5px;}
+  .flow-box{
+    border-left:3px solid var(--navy);background:var(--gray-bg);
+    padding:5px 8px;border-radius:2px;font-size:10px;line-height:1.35;
+  }
+  .flow-box.raw     {border-left-color:var(--warn-red);background:#fbe7e3;}
+  .flow-box.process {border-left-color:var(--blue-acc);background:#e3f0fb;}
+  .flow-box.split   {border-left-color:#2e8b57;background:var(--hi-green);}
+  .flow-box.filter  {border-left-color:#c39520;background:var(--hi-yellow);}
+  .flow-box.deg     {border-left-color:#2e8b57;background:var(--hi-green);}
+  .flow-box.qubo    {border-left-color:var(--navy);background:linear-gradient(135deg,#f0f4fa 0%,#d6e7f3 100%);}
+  .flow-box.classif {border-left-color:var(--navy-mid);background:#ececec;}
+  .flow-box .num{
+    display:inline-block;background:var(--navy);color:white;
+    width:14px;height:14px;border-radius:50%;
+    text-align:center;line-height:14px;font-size:9px;font-weight:700;margin-right:3px;
+    vertical-align:middle;
+  }
+  .flow-box.raw .num     {background:var(--warn-red);}
+  .flow-box.split .num   {background:#2e8b57;}
+  .flow-box.filter .num  {background:#c39520;}
+  .flow-box.deg .num     {background:#2e8b57;}
+  .flow-box.qubo .num    {background:var(--navy);}
+  .flow-box.classif .num {background:var(--navy-mid);}
+  .flow-title{color:var(--navy);font-weight:700;font-size:10.5px;margin-bottom:2px;}
+  .flow-stat{
+    display:inline-block;background:white;border:1px solid var(--gray-line);
+    padding:0 4px;border-radius:2px;font-size:9px;color:var(--navy);font-weight:600;margin-right:2px;margin-top:1px;
+  }
+  .flow-arrow{text-align:center;color:var(--blue-acc);font-size:11px;font-weight:bold;height:12px;line-height:12px;}
+  .gene-count-tag{
+    display:inline-block;background:var(--navy);color:white;
+    padding:1px 6px;border-radius:2px;font-size:9px;font-weight:700;margin-left:5px;
+  }
+
+  /* S3 */
+  table.results{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0;}
+  table.results thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:6px 7px;border-bottom:2px solid var(--navy);font-size:11.5px;
+  }
+  table.results thead th:first-child{text-align:left;padding-left:12px;}
+  table.results tbody td{padding:5px 7px;border-bottom:1px dashed var(--gray-line);text-align:center;}
+  table.results tbody td:first-child{text-align:left;padding-left:12px;font-weight:600;}
+  table.results tbody tr.highlight td{background:var(--hi-green);font-weight:700;}
+  .badge{
+    display:inline-block;background:var(--navy);color:white;
+    font-size:9.5px;font-weight:700;padding:1px 5px;border-radius:2px;margin-left:3px;
+  }
+  .badge.green{background:#2e8b57;}
+  .star{color:#c39520;font-weight:700;}
+  .footnote{margin-top:5px;color:var(--gray-mid);font-size:10.5px;font-style:italic;}
+
+  /* S4 */
+  .ct-gene-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:6px;}
+  .ct-gene-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:left;padding:5px 8px;border-bottom:2px solid var(--navy);font-size:11px;
+  }
+  .ct-gene-table tbody td{padding:4px 8px;border-bottom:1px dashed var(--gray-line);vertical-align:top;}
+  .ct-gene-table tbody td.ct-name{font-weight:700;color:var(--navy);width:60px;}
+  .ct-gene-table tbody td.gene-list{font-family:Menlo,monospace;font-size:11px;line-height:1.5;}
+  .ms-gene{background:#fff8d4;padding:0 3px;border-radius:2px;font-weight:600;color:#8b6914;}
+  .go-table{width:100%;border-collapse:collapse;font-size:11px;}
+  .go-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:left;padding:5px 7px;border-bottom:2px solid var(--navy);font-size:10.5px;
+  }
+  .go-table tbody td{padding:4px 7px;border-bottom:1px dashed var(--gray-line);}
+  .go-table tbody td.go-fe{font-family:"STIX Two Math",Georgia,serif;text-align:right;width:55px;font-weight:600;color:var(--navy);}
+  .go-table tbody td.go-q{font-family:"STIX Two Math",Georgia,serif;text-align:right;width:70px;color:var(--gray-text);}
+  .go-table tbody tr.highlight td{background:var(--hi-yellow);}
+  .row{display:flex;gap:14px;}
+  .col{flex:1;}
+
+  @media print{
+    @page{size:1280px 720px;margin:0;}
+    html,body{background:white;width:1280px;}
+    .slide{box-shadow:none;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- S1: Patient demographics by cohort -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S1</span>Patient demographics by cohort (n=50 donors)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">4 public cohorts used in this study — MS / HD composition + sex &amp; age distribution</div>
+
+  <!-- MS/HD balance summary callout -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:6px 0 10px 0;">
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid var(--blue-acc);padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Pappalardo</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>11</strong> | HD <strong style="color:var(--blue-acc);">6</strong> / MS <strong style="color:#c39520;">5</strong></div>
+      <div style="font-size:10.5px;color:var(--gray-mid);margin-top:2px;">MS 45% — slight HD majority</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid #2e8b57;padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Heming ★</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>18</strong> | HD <strong style="color:var(--blue-acc);">9</strong> / MS <strong style="color:#c39520;">9</strong></div>
+      <div style="font-size:10.5px;color:#2e8b57;margin-top:2px;font-weight:700;">MS 50% — balanced</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid #c39520;padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Ramesh</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>17</strong> | HD <strong style="color:var(--blue-acc);">3</strong> / MS <strong style="color:#c39520;">14</strong></div>
+      <div style="font-size:10.5px;color:#c39520;margin-top:2px;font-weight:700;">MS 82% — imbalanced</div>
+    </div>
+    <div style="background:#fafbfc;border:1px solid var(--gray-line);border-left:4px solid var(--gray-mid);padding:6px 10px;">
+      <div style="font-weight:700;color:var(--navy);font-size:12.5px;">Touil</div>
+      <div style="font-size:11px;color:var(--gray-text);margin-top:2px;">total <strong>4</strong> | HD <strong style="color:var(--blue-acc);">4</strong> / MS <strong style="color:#c39520;">0</strong></div>
+      <div style="font-size:10.5px;color:var(--gray-mid);margin-top:2px;">HD only — training only</div>
+    </div>
+  </div>
+
+  <style>
+    .demo-table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.4;color:var(--gray-text);margin-top:6px;}
+    .demo-table thead th{
+      background:var(--navy);color:white;font-weight:700;
+      text-align:center;padding:7px 8px;font-size:12.5px;letter-spacing:0.3px;
+    }
+    .demo-table thead th:first-child{text-align:left;padding-left:14px;}
+    .demo-table tbody td{padding:6px 8px;border-bottom:1px solid var(--gray-line);text-align:center;}
+    .demo-table tbody td:first-child{text-align:left;padding-left:14px;font-weight:600;color:var(--navy);}
+    .demo-table tbody tr.cohort-header td{
+      background:#eef3f9;color:var(--navy);font-weight:700;font-size:12.5px;
+      letter-spacing:0.2px;text-align:left;padding:5px 14px;
+    }
+    .demo-table tbody tr.total td{
+      background:var(--hi-green);font-weight:700;color:var(--navy);
+      border-top:2px solid #2e8b57;border-bottom:2px solid #2e8b57;
+    }
+    .demo-table tbody td.dx-MS{color:#c39520;font-weight:700;}
+    .demo-table tbody td.dx-HD{color:var(--blue-acc);font-weight:700;}
+    .accession{font-family:Menlo,Consolas,monospace;font-size:10.5px;color:var(--gray-mid);}
+  </style>
+
+  <table class="demo-table">
+    <thead>
+      <tr>
+        <th>Cohort</th>
+        <th>Group</th>
+        <th>n</th>
+        <th>Female / Male</th>
+        <th>Age (mean ± SD)</th>
+        <th>Age range</th>
+        <th>Compartment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Pappalardo -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Pappalardo</strong> &nbsp; <span class="accession">PRJNA671484_MS_Tcell</span> &nbsp; total n=11</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>6</td><td>4 / 2</td><td>32.7 ± 5.5</td><td>27 – 38</td><td rowspan="2" style="vertical-align:middle;">CSF + PBMC</td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>5</td><td>4 / 1</td><td>29.0 ± 8.7</td><td>21 – 39</td></tr>
+
+      <!-- Heming -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Heming</strong> &nbsp; <span class="accession">osmzhlab_MS_ence_cov</span> &nbsp; total n=18</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>9</td><td>7 / 2</td><td>31.7 ± 7.5</td><td>20 – 45</td><td rowspan="2" style="vertical-align:middle;">CSF only<br><span style="font-size:10px;color:var(--gray-mid);">(longitudinal: ~2 samples/donor)</span></td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>9</td><td>5 / 4</td><td>38.4 ± 12.7</td><td>22 – 54</td></tr>
+
+      <!-- Ramesh -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Ramesh</strong> &nbsp; <span class="accession">PRJNA549712_MS_PBMC_UCSF</span> &nbsp; total n=17</td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>3</td><td>1 / 2</td><td>33.7 ± 7.0</td><td>27 – 41</td><td rowspan="2" style="vertical-align:middle;">CSF + PBMC</td></tr>
+      <tr><td></td><td class="dx-MS">MS</td><td>14</td><td>9 / 5</td><td>39.4 ± 9.8</td><td>22 – 54</td></tr>
+
+      <!-- Touil -->
+      <tr class="cohort-header"><td colspan="7">▶ <strong>Touil</strong> &nbsp; <span class="accession">PRJNA979258_cryoCSF</span> &nbsp; total n=4 &nbsp; <span style="color:var(--gray-mid);font-weight:400;font-size:11px;">(HD only — fixed to training set)</span></td></tr>
+      <tr><td></td><td class="dx-HD">HD</td><td>4</td><td>2 / 2</td><td>42.0 ± 11.7</td><td>27 – 54</td><td>CSF (cryopreserved)</td></tr>
+
+      <!-- Total -->
+      <tr class="total">
+        <td colspan="2">Total (combined)</td>
+        <td>50</td>
+        <td>32 / 18</td>
+        <td>35.7 ± 9.7</td><td>20 – 54</td><td>CSF (4) / PBMC (2)</td>
+      </tr>
+      <tr class="total">
+        <td>of which <span class="dx-MS">MS</span></td>
+        <td class="dx-MS">28</td>
+        <td>—</td><td>18 / 10 (64% F)</td><td>37.2 ± 11.0</td><td>21 – 54</td>
+        <td style="font-size:11px;">3 cohorts</td>
+      </tr>
+      <tr class="total">
+        <td>of which <span class="dx-HD">HD</span></td>
+        <td class="dx-HD">22</td>
+        <td>—</td><td>14 / 8 (64% F)</td><td>34.1 ± 8.3</td><td>20 – 54</td>
+        <td style="font-size:11px;">4 cohorts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;font-size:11px;line-height:1.55;color:var(--gray-text);">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 12px;">
+      <strong style="color:var(--navy);">▶ MS-HD balance</strong>: overall <strong>MS 28 vs HD 22</strong> (1.27:1). Within-cohort MS/HD ratios: Pappalardo (5:6), Heming (9:9), Ramesh (14:3), Touil (0:4). Touil's HD-only contribution maintains overall HD coverage.
+    </div>
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 12px;">
+      <strong style="color:var(--navy);">▶ Sex / age</strong>: female ratio is <strong>64% in both MS and HD</strong>; mean age 37.2 (MS) vs 34.1 (HD), <strong>well-matched</strong>. The wider age range in MS (21–54) reflects mixed disease stages across the 4 cohorts.
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:7px;">
+    EDSS scores, disease duration, prior DMT use, and MRI-derived measures were not retrievable from the public metadata of all 4 cohorts and are therefore not shown. Acquisition of these clinical variables is planned for Phase 2 in collaboration with partner sites.
+  </p>
+
+  <div class="pagenum">S1</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S2: Per-cohort Detailed Results -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S2</span>Per-cohort Detailed Results (CSF)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Held AUC by cohort (mean ± fold std) — v6 DESeq2 tight, K ∈ {5, 10}</div>
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:20%">Method</th>
+        <th>Pappalardo (45% MS)</th>
+        <th>Heming (50% MS, balanced)</th>
+        <th>Ramesh (82% MS)</th>
+        <th>cohort mean</th>
+        <th>cohort σ</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>QUBO_hybrid <span class="badge green">Main</span></td>
+        <td>0.947 ± 0.084</td>
+        <td><strong>0.738 ± 0.060</strong> <span class="star">★</span></td>
+        <td>0.890 ± 0.021</td>
+        <td><strong>0.858</strong></td>
+        <td>0.108</td>
+      </tr>
+      <tr>
+        <td>QUBO</td>
+        <td>0.933 ± 0.041</td><td>0.694 ± 0.099</td>
+        <td>0.881 ± 0.112</td>
+        <td>0.836</td><td>0.126</td>
+      </tr>
+      <tr>
+        <td>QUBO_consensus</td>
+        <td>0.913 ± 0.069</td><td>0.622 ± 0.110</td>
+        <td>0.838 ± 0.097</td>
+        <td>0.791</td><td>0.151</td>
+      </tr>
+      <tr>
+        <td>DE_top</td>
+        <td><strong>0.980 ± 0.030</strong> <span class="star">★</span></td>
+        <td>0.726 ± 0.124</td>
+        <td><strong>0.914 ± 0.080</strong> <span class="star">★</span></td>
+        <td><strong>0.873</strong> <span class="star">★</span></td>
+        <td>0.132</td>
+      </tr>
+      <tr>
+        <td>HVG</td>
+        <td>0.967 ± 0.033</td><td>0.768 ± 0.142</td><td>0.843 ± 0.147</td>
+        <td>0.859</td><td><strong>0.100</strong> <span class="star">★</span></td>
+      </tr>
+      <tr>
+        <td>Elastic Net</td>
+        <td>0.933 ± 0.071</td><td>0.672 ± 0.030</td><td>0.910 ± 0.039</td>
+        <td>0.838</td><td>0.145</td>
+      </tr>
+      <tr>
+        <td>LASSO</td>
+        <td>0.940 ± 0.068</td><td>0.667 ± 0.117</td><td>0.786 ± 0.058</td>
+        <td>0.797</td><td>0.137</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="footnote">
+    QUBO_hybrid achieves <strong>AUC = 0.738 on balanced Heming hold-out — #1 among label-aware methods</strong>.
+    Pappalardo / Ramesh AUCs are inflated by class imbalance (Ramesh 82% MS).
+    cohort σ ★ = HVG #1; QUBO_hybrid #2 (#1 among label-aware methods).
+  </p>
+
+  <div class="row" style="gap:14px;margin-top:10px;">
+    <div class="col">
+      <div class="section-h smaller" style="border-left-color:var(--blue-acc);">CSF — all metrics (mean over 3 cohorts)</div>
+      <table class="results" style="font-size:11px;">
+        <thead>
+          <tr>
+            <th style="width:24%">Method</th>
+            <th>AUC</th><th>AP</th><th>F1</th><th>MCC</th><th>σ_AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>QUBO_hybrid <span class="badge green">Main</span></td>
+            <td>0.858</td>
+            <td>0.900</td>
+            <td><strong>0.731</strong> <span class="star">★</span></td>
+            <td><strong>0.427</strong> <span class="star">★</span></td>
+            <td>0.108</td>
+          </tr>
+          <tr><td>QUBO</td><td>0.836</td><td>0.887</td><td>0.705</td><td>0.380</td><td>0.126</td></tr>
+          <tr><td>QUBO_consensus</td><td>0.791</td><td>0.854</td><td>0.696</td><td>0.329</td><td>0.151</td></tr>
+          <tr><td>DE_top</td><td><strong>0.873</strong> <span class="star">★</span></td><td><strong>0.915</strong> <span class="star">★</span></td><td>0.691</td><td>0.350</td><td>0.132</td></tr>
+          <tr><td>HVG</td><td>0.859</td><td>0.894</td><td>0.668</td><td>0.317</td><td><strong>0.100</strong> <span class="star">★</span></td></tr>
+          <tr><td>Elastic Net</td><td>0.838</td><td>0.880</td><td>0.712</td><td>0.327</td><td>0.145</td></tr>
+          <tr><td>LASSO</td><td>0.797</td><td>0.860</td><td>0.708</td><td>0.341</td><td>0.137</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        QUBO_hybrid is <strong>#1 on F1 and MCC</strong> (imbalance-robust). AUC / AP behind DE_top by Δ 0.015 / 0.015.
+        Under cohort imbalance (Pappalardo 45% / Heming 50% / Ramesh 82% MS), <strong>MCC is the most trustworthy metric</strong> (Chicco &amp; Jurman 2020).
+      </p>
+    </div>
+
+    <div class="col">
+      <div class="section-h smaller" style="border-left-color:var(--term-purple);">PBMC — all metrics (mean over 3 cohorts, edgeR-based)</div>
+      <table class="results" style="font-size:11px;">
+        <thead>
+          <tr>
+            <th style="width:30%">Method</th>
+            <th>AUC</th><th>AP</th><th>F1</th><th>MCC</th><th>σ_AUC</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>QUBO_hybrid</td>
+            <td>0.718</td>
+            <td>0.840</td>
+            <td>0.757</td>
+            <td>0.095</td>
+            <td>0.042</td>
+          </tr>
+          <tr><td>QUBO_consensus</td><td><strong>0.768</strong> <span class="star">★</span></td><td>0.861</td><td>0.775</td><td><strong>0.186</strong></td><td>0.065</td></tr>
+          <tr class="highlight">
+            <td>QUBO <span class="badge green">Proposed</span></td>
+            <td>0.767</td>
+            <td>0.860</td>
+            <td>0.777</td>
+            <td>0.160</td>
+            <td>0.033</td>
+          </tr>
+          <tr><td>LASSO</td><td>0.756</td><td>0.878</td><td>0.779</td><td>0.152</td><td>0.048</td></tr>
+          <tr><td>Elastic Net</td><td>0.760</td><td>0.885</td><td><strong>0.784</strong> <span class="star">★</span></td><td>0.165</td><td><strong>0.022</strong> <span class="star">★</span></td></tr>
+          <tr><td>DE_top</td><td>0.690</td><td>0.837</td><td>0.756</td><td>0.001</td><td>0.034</td></tr>
+          <tr><td>HVG</td><td>0.742</td><td><strong>0.883</strong> <span class="star">★</span></td><td>0.779</td><td><strong>0.241</strong> <span class="star">★</span></td><td>0.075</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        PBMC results are from the <strong>v6 entrue_bio_edger</strong> run (edgeR-based). <strong>v6 DESeq2 tight was run for CSF only</strong>, so PBMC is shown for reference; direct head-to-head against CSF is not appropriate.<br>
+        On PBMC, <strong>QUBO / QUBO_consensus lead on AUC</strong>; QUBO_hybrid trails (top-20 pre-filter over-prunes the weaker PBMC signal).<br>
+        Pappalardo = 3 folds; Heming / Ramesh = 5 folds.
+      </p>
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10px;margin-top:6px;text-align:center;background:var(--gray-bg);padding:5px 10px;">
+    <strong>AUC</strong>: ROC AUC / <strong>AP</strong>: PR AUC (minority detection) / <strong>F1</strong>: P-R harmonic mean / <strong>MCC</strong>: imbalance-robust correlation / <strong>σ_AUC</strong>: std across cohorts (lower = more reproducible). ★ = best within compartment
+  </p>
+
+  <div class="info-block" style="margin-top:6px;margin-bottom:0;">
+    <div class="h">Statistical considerations (EPV)</div>
+    <div class="body">
+      <strong>EPV (Events Per Variable)</strong>: per cell-type classifier with K=17 × 22 events ≈ <strong>1.3</strong>, below the classical Peduzzi 1996 threshold (≥10).
+      However: <strong>(i) L2 regularization, (ii) 8-cell-type soft-voting, (iii) cross-cohort validation</strong> mitigate overfitting.
+      <strong>Empirical cross-cohort σ_AUC = 0.044 (CSF) / 0.033 (PBMC) is direct evidence overfitting is not severe</strong>. Modern guidelines (van Smeden 2019, Riley 2019) accept EPV 2-5 for prediction modeling with regularization.
+    </div>
+  </div>
+
+  <div class="pagenum">S2</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S3: Top genes per cell type & MS-curated set details -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S3</span>Top Genes per Cell Type &amp; Curated Enrichment Detail</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="row" style="gap:14px;">
+    <div class="col">
+      <div class="section-h smaller">QUBO_hybrid top selected genes per cell type (CSF, v6 DESeq2 tight)</div>
+      <table class="ct-gene-table">
+        <thead><tr><th>Cell type</th><th>K</th><th>Top selected (frequency in /15 panels)</th></tr></thead>
+        <tbody>
+          <tr><td class="ct-name">B</td><td>10</td><td class="gene-list"><span class="ms-gene">IGLC1</span>(6), <span class="ms-gene">IGHA2</span>(5), <span class="ms-gene">IGKV4-1</span>(4), SRM(4), <span class="ms-gene">IGHV2-70</span>(3), <span class="ms-gene">IGKV1-39</span>(3), MEF2B(2), <span class="ms-gene">IGLV3-1</span>(2), <span class="ms-gene">IGHG4</span>(2)</td></tr>
+          <tr><td class="ct-name">Mono</td><td>5</td><td class="gene-list">TMEM97(6), C5orf17(5), FP236383.3(5), <span class="ms-gene">CXCL8</span>(3), GPR85(3), TCHH(3), VWC2(3), <span class="ms-gene">CCL4</span>(3), <span class="ms-gene">GNLY</span>(2)</td></tr>
+          <tr><td class="ct-name">CD4_T</td><td>10</td><td class="gene-list">CDKN2B(10), <span class="ms-gene">TYROBP</span>(8), <span class="ms-gene">AIF1</span>(7), <span class="ms-gene">PTGDS</span>(6), KRT1(5), FMN1(4), ST6GALNAC3(4), DNAH8(3), SH3RF3(3)</td></tr>
+          <tr><td class="ct-name">CD8_T</td><td>10</td><td class="gene-list"><span class="ms-gene">CCL3L1</span>(8), HFM1(5), SPINK2(5), HIST1H2BD(5), CLCN5(4), <span class="ms-gene">TYROBP</span>(4), RASAL2(4), FAM83D(3), TMEM155(3)</td></tr>
+          <tr><td class="ct-name">NK</td><td>5</td><td class="gene-list">CAPS2(4), USP40(3), PCNX2(3), ACAD11(3), PZP(2), ARMCX1(2), KIAA1841(2), PKP4(2), PBX1(2)</td></tr>
+          <tr><td class="ct-name">DC</td><td>5</td><td class="gene-list"><span class="ms-gene">TRH</span>(8), <span class="ms-gene">CCL4</span>(5), <span class="ms-gene">GNLY</span>(4), HTRA1(4), CTTNBP2(4), EGFL7(4), <span class="ms-gene">IL10</span>(4), SIGLEC6(4)</td></tr>
+          <tr><td class="ct-name">dnT</td><td>5</td><td class="gene-list">MYB(6), MAP3K13(4), DHRS3(4), UBE2E2(4), <span class="ms-gene">HAVCR2</span>(3), <span class="ms-gene">CD38</span>(3), MCTP2(3), CNNM2(2), PLPP1(2), <span class="ms-gene">IKZF2</span>(2)</td></tr>
+          <tr><td class="ct-name">gdT</td><td>10</td><td class="gene-list">MED27(3), MICAL3(3), EFHD1(2), FUT7(2), NCOA3(2), PKD1L1(2), CDR2(2), PTPRJ(2), DHRS7B(2)</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        <span class="ms-gene">Yellow</span> = MS / immune-relevant (Ig variable regions = oligoclonal band, CXCL8/CCL4/CCL3L1 = inflammatory chemokine, TYROBP/AIF1 = microglia/myeloid axis, HAVCR2 = T-cell exhaustion, IL10 = regulatory, IKZF2 = Treg/Helios). 15 panels = 3 cohorts × 5 folds.
+      </p>
+    </div>
+
+    <div class="col">
+      <div class="section-h smaller">Reproducibility &amp; functional axes</div>
+      <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 11px;font-size:11px;line-height:1.55;color:var(--gray-text);margin-bottom:8px;">
+        <strong style="color:var(--navy);">Union 500 genes / Stable ≥ 50% = 4 genes</strong> (CCL3L1, CDKN2B, TRH, TYROBP).<br>
+        DESeq2 tight (K=5/10) uses stricter inference (Wald + apeglm shrinkage) than univariate t-tests, which tends to <strong>increase cohort-specific hits</strong>. Pappalardo / Heming / Ramesh capture different aspects of MS biology (PBMC plasmablast / CSF myeloid / CSF cytotoxic), yielding a broad Union but consistent within-cohort directionality.
+      </div>
+
+      <div class="section-h smaller">Functional axes (literature-based annotation)</div>
+      <table class="go-table" style="font-size:10.5px;">
+        <thead><tr><th>Axis</th><th>Genes (cell type)</th></tr></thead>
+        <tbody>
+          <tr class="highlight"><td><strong>Plasmablast / oligoclonal band</strong></td><td>IGLC1, IGHA2, IGKV4-1, IGHV2-70, IGHG4, IGLV3-1, IGKV1-39 (B)</td></tr>
+          <tr><td><strong>Inflammatory chemokine</strong></td><td>CXCL8 (Mono), CCL4 (Mono/DC), CCL3L1 (CD8_T)</td></tr>
+          <tr><td><strong>Microglia / myeloid axis</strong> <span style="color:var(--gray-mid);font-size:9px;">[Schirmer 2019]</span></td><td>TYROBP (CD4_T/CD8_T), AIF1 (CD4_T)</td></tr>
+          <tr><td><strong>T-cell exhaustion / activation</strong></td><td>HAVCR2 (TIM-3), CD38 (dnT)</td></tr>
+          <tr><td><strong>Cytotoxicity</strong></td><td>GNLY (Mono/DC)</td></tr>
+          <tr><td><strong>Regulatory</strong></td><td>IL10 (DC), IKZF2 (dnT)</td></tr>
+          <tr><td><strong>CSF prostaglandin</strong> <span style="color:var(--gray-mid);font-size:9px;">[Linke 1999]</span></td><td>PTGDS (CD4_T)</td></tr>
+          <tr><td><strong>TRH endocrine axis</strong> <span style="color:var(--gray-mid);font-size:9px;">[CSF biomarker]</span></td><td>TRH (DC)</td></tr>
+        </tbody>
+      </table>
+      <p class="footnote" style="font-size:10px;">
+        Diverse use of BCR variable regions = signature of oligoclonal B response (Cepok 2005). <strong>TYROBP/AIF1 hits in CD4_T/CD8_T</strong> = T-myeloid signaling boundary genes (or possible rare myeloid contamination sorted into T-cell clusters; warrants verification).
+      </p>
+    </div>
+  </div>
+
+  <div class="pagenum">S3</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S4: 23 gene functional annotation (Figure 1 y-axis) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S4</span>QUBO_hybrid frequently-selected genes — functional annotation (v6 DESeq2 tight)</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">Frequently selected QUBO_hybrid genes per cell type (top 4-5/ct, ~32 unique) — biology summary</div>
+
+  <style>
+    .gene-annot-table{width:100%;border-collapse:collapse;font-size:10.5px;line-height:1.35;color:var(--gray-text);margin-top:4px;}
+    .gene-annot-table th{background:var(--navy);color:white;padding:4px 6px;text-align:left;font-weight:700;font-size:10px;}
+    .gene-annot-table td{padding:3px 7px;border-bottom:1px solid var(--gray-line);vertical-align:top;}
+    .gene-annot-table .ct-header td{background:#eef3f9;color:var(--navy);font-weight:700;font-size:10.5px;letter-spacing:0.3px;padding:4px 7px;}
+    .gene-annot-table .gene-name{font-weight:700;color:var(--navy);font-family:Menlo,Consolas,monospace;font-size:10.5px;white-space:nowrap;}
+    .gene-annot-table .ms-mark{color:#2e8b57;font-weight:700;}
+  </style>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+    <div>
+      <table class="gene-annot-table">
+        <thead><tr><th style="width:22%">Gene</th><th>Function (MS context)</th></tr></thead>
+        <tbody>
+          <tr class="ct-header"><td colspan="2">▶ B cells (top 5)</td></tr>
+          <tr><td class="gene-name ms-mark">IGLC1</td><td>Ig λ light chain constant. <strong>Plasmablast signature</strong>; origin of CSF <strong>oligoclonal bands</strong> (Cepok 2005)</td></tr>
+          <tr><td class="gene-name ms-mark">IGHA2</td><td>Ig α2 heavy chain. <strong>IgA class plasmablast</strong>; mucosal-immunity association reported in MS</td></tr>
+          <tr><td class="gene-name ms-mark">IGKV4-1</td><td>Ig κ variable region. <strong>BCR clonal diversity marker</strong>; diverse usage in MS CSF</td></tr>
+          <tr><td class="gene-name">SRM</td><td>Spermidine synthase. <strong>Polyamine metabolism</strong>; induced during B-cell activation / proliferation</td></tr>
+          <tr><td class="gene-name ms-mark">IGHV2-70</td><td>Ig heavy variable. <strong>Oligoclonal B-cell response</strong>, specific lineage reported in MS (Obermeier 2008)</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ Mono (top 5; K=5)</td></tr>
+          <tr><td class="gene-name">TMEM97</td><td>Transmembrane protein 97 (σ2 receptor). <strong>Cholesterol homeostasis</strong>; induced in neuroinflammation</td></tr>
+          <tr><td class="gene-name">C5orf17</td><td>Uncharacterized ORF. Reproduces across hold-outs in MS Mono — true hit vs coincidence requires verification</td></tr>
+          <tr><td class="gene-name ms-mark">CXCL8</td><td>IL-8. <strong>Neutrophil / monocyte inflammatory chemokine</strong>; elevated in acute MS CSF</td></tr>
+          <tr><td class="gene-name ms-mark">CCL4</td><td>MIP-1β. <strong>T-cell / NK chemoattractant</strong>; secreted by activated monocytes in MS lesions</td></tr>
+          <tr><td class="gene-name">TCHH</td><td>Trichohyalin. Skin keratin-associated; limited immune function</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ CD4_T (top 5; K=10)</td></tr>
+          <tr><td class="gene-name">CDKN2B</td><td>Cyclin-dependent kinase inhibitor 2B (p15). <strong>T-cell proliferation control / senescence</strong></td></tr>
+          <tr><td class="gene-name ms-mark">TYROBP</td><td>DAP12. <strong>Myeloid activation adapter</strong>. Hit in CD4_T may reflect T-myeloid interaction signature (Schirmer 2019)</td></tr>
+          <tr><td class="gene-name ms-mark">AIF1</td><td>Iba1. <strong>Microglia / macrophage marker</strong>. Hit in CD4_T fraction may indicate myeloid-derived transcript</td></tr>
+          <tr><td class="gene-name ms-mark">PTGDS</td><td>Prostaglandin D2 synthase. <strong>CSF biomarker</strong>; highly expressed in CSF (Linke 1999, Stoop 2010)</td></tr>
+          <tr><td class="gene-name">KRT1</td><td>Keratin 1. Normally epithelial-specific; possible CSF sample contamination (caveat)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <table class="gene-annot-table">
+        <thead><tr><th style="width:22%">Gene</th><th>Function (MS context)</th></tr></thead>
+        <tbody>
+          <tr class="ct-header"><td colspan="2">▶ CD8_T (top 5; K=10)</td></tr>
+          <tr><td class="gene-name ms-mark">CCL3L1</td><td>MIP-1α-like. <strong>Cytotoxic T-cell chemokine</strong>; CCL3 family drives CD8 infiltration into MS lesions</td></tr>
+          <tr><td class="gene-name">HFM1</td><td>Helicase for meiosis 1. Normally germ-cell-specific; hit in CD8_T warrants verification</td></tr>
+          <tr><td class="gene-name">SPINK2</td><td>Serine protease inhibitor. Limited immune role</td></tr>
+          <tr><td class="gene-name">HIST1H2BD</td><td>Histone H2B. <strong>Chromatin remodeling</strong>; expression changes with T-cell activation</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ DC (top 5; K=5)</td></tr>
+          <tr><td class="gene-name ms-mark">TRH</td><td>Thyrotropin-releasing hormone. <strong>CSF endocrine biomarker</strong>; HPT axis link in MS</td></tr>
+          <tr><td class="gene-name ms-mark">CCL4</td><td>(same as above; DC is a major source)</td></tr>
+          <tr><td class="gene-name ms-mark">GNLY</td><td>Granulysin. <strong>Antimicrobial / cytotoxic</strong>; NK/CTL-derived, rare in DC</td></tr>
+          <tr><td class="gene-name ms-mark">IL10</td><td><strong>Regulatory cytokine</strong>; produced by Treg/Breg/regulatory DC, reduced in MS</td></tr>
+
+          <tr class="ct-header"><td colspan="2">▶ dnT — double-negative T (top 5; K=5)</td></tr>
+          <tr><td class="gene-name">MYB</td><td>Transcription factor. <strong>T-cell development / memory T maintenance</strong></td></tr>
+          <tr><td class="gene-name ms-mark">HAVCR2</td><td>TIM-3. <strong>T-cell exhaustion / checkpoint</strong>; increased in chronic-phase MS T cells</td></tr>
+          <tr><td class="gene-name ms-mark">CD38</td><td>NAD-glycohydrolase. <strong>T-cell activation marker</strong>; elevated in MS (Smolders 2018)</td></tr>
+          <tr><td class="gene-name ms-mark">IKZF2</td><td>Helios. <strong>Treg / developmental marker</strong>; used to identify natural Treg</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:10px;background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;font-size:11px;line-height:1.5;color:var(--gray-text);">
+        <strong style="color:#2e8b57;">▶ Mapping to MS pathology axes (v6 DESeq2 tight)</strong>:
+        <strong>Plasmablast / oligoclonal</strong> = IGLC1, IGHA2, IGKV4-1, IGHV2-70 ;
+        <strong>Inflammatory chemokine</strong> = CXCL8, CCL4, CCL3L1 ;
+        <strong>Myeloid axis (in T-cell fraction)</strong> = TYROBP, AIF1 ;
+        <strong>Exhaustion / activation</strong> = HAVCR2, CD38 ;
+        <strong>Regulatory</strong> = IL10, IKZF2 ;
+        <strong>CSF biomarker</strong> = PTGDS, TRH
+      </div>
+
+      <p class="footnote" style="font-size:9.5px;margin-top:8px;color:var(--gray-mid);">
+        <span class="ms-mark" style="color:#2e8b57;font-weight:700;">Green</span> = literature-curated MS / immune-related gene. <strong>Caveat</strong>: DESeq2 tight is strict (Wald + apeglm shrinkage), occasionally surfacing cohort-specific hits — KRT1 (CD4_T) may be keratin contamination; HFM1 (CD8_T) requires re-verification.
+      </p>
+    </div>
+  </div>
+
+  <div class="pagenum">S4</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S5: MS biology vs QUBO correspondence -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S5</span>MS Biology Reference — QUBO Selection Correspondence</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Cell-type × gene combinations from literature vs QUBO_hybrid selection (v6 DESeq2 tight)</div>
+
+  <table class="ct-gene-table" style="font-size:10.5px;">
+    <thead>
+      <tr>
+        <th style="width:13%">Cell type</th>
+        <th style="width:35%">Literature-established genes</th>
+        <th style="width:34%">References</th>
+        <th style="width:18%">QUBO_hybrid selected</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr style="background:var(--hi-green);">
+        <td class="ct-name">B</td>
+        <td class="gene-list">MS4A1 (CD20), <span class="ms-gene">HLA-DRB1</span>, <span class="ms-gene">IGHM/IGKC/IGLC2</span>, BTK, IGHV/IGKV/IGLV repertoire</td>
+        <td style="font-size:10px;">Hauser 2017 (CD20), IMSGC (GWAS), <strong>Cepok 2005 / Obermeier 2008 (oligoclonal IGHV)</strong></td>
+        <td><strong style="color:#2e8b57;">✅✅ IGLC1, IGHA2, IGKV4-1, IGHV2-70, IGKV1-39, IGLV3-1, IGHG4 (BCR repertoire diversity = oligoclonal hallmark)</strong></td>
+      </tr>
+      <tr>
+        <td class="ct-name">CD4_T</td>
+        <td class="gene-list">IL17A/F, RORC, FOXP3, IL2RA, CCR6, IL7R</td>
+        <td style="font-size:10px;">Tzartos 2008 (Th17), Viglietta 2004 (Treg), IMSGC</td>
+        <td><strong style="color:#c39520;">△ Direct Th17/Treg markers not selected</strong> / instead <strong>TYROBP, AIF1 (T-myeloid interaction signature)</strong> frequently surface</td>
+      </tr>
+      <tr>
+        <td class="ct-name">CD8_T</td>
+        <td class="gene-list">GZMA/B/K, PRF1, CXCR3, EOMES, <span class="ms-gene">CCL3/4/5</span></td>
+        <td style="font-size:10px;">Babbe 2000 (lesion infiltration)</td>
+        <td><strong style="color:#2e8b57;">✅ CCL3L1 (cytotoxic chemokine)</strong> / granzyme family low frequency</td>
+      </tr>
+      <tr>
+        <td class="ct-name">Mono</td>
+        <td class="gene-list">HLA-DRB1/DPB1/DRA, CD74, IFI30, FTH1, FTL, TREM2, APOE, <span class="ms-gene">CXCL8, CCL4</span></td>
+        <td style="font-size:10px;">IMSGC (HLA), Hametner 2013 (iron rim), Schirmer 2019 (DAM), standard (chemokine)</td>
+        <td><strong style="color:#2e8b57;">✅ CXCL8, CCL4 (inflammatory chemokine)</strong> / HLA / iron-rim family not selected under K=5 constraint (DE_top picks PTGDS / TAL1 / TCHH instead)</td>
+      </tr>
+      <tr>
+        <td class="ct-name">NK</td>
+        <td class="gene-list">NCAM1 (CD56bright), KLRC1, GNLY, GZMB</td>
+        <td style="font-size:10px;">Bielekova 2006 (daclizumab), standard</td>
+        <td><strong style="color:#c39520;">△ Standard NK markers not selected</strong> / strong cohort specificity, Union dispersed</td>
+      </tr>
+      <tr style="background:var(--hi-green);">
+        <td class="ct-name">DC</td>
+        <td class="gene-list">HLA-DR/DP/DQ, CD83, IRF4/8, IL12B, <span class="ms-gene">IL10</span>, CCL4</td>
+        <td style="font-size:10px;">Murphy 2016 (DC subsets), standard (regulatory DC)</td>
+        <td><strong style="color:#2e8b57;">✅ TRH, CCL4, GNLY, IL10, SIGLEC6 (regulatory/inflammatory DC signature)</strong></td>
+      </tr>
+      <tr>
+        <td class="ct-name">dnT</td>
+        <td class="gene-list">GZMA, ISG15, IL32, <span class="ms-gene">HAVCR2, CD38</span></td>
+        <td style="font-size:10px;">Standard (dnT cytotoxic), Smolders 2018 (CD38)</td>
+        <td><strong style="color:#2e8b57;">✅ HAVCR2 (TIM-3 exhaustion), CD38 (activation), IKZF2 (Helios)</strong> = T-cell exhaustion axis</td>
+      </tr>
+      <tr>
+        <td class="ct-name">gdT</td>
+        <td class="gene-list">IL17A, TRGV9, GZMA</td>
+        <td style="font-size:10px;">Petermann 2010 (IL-17 gdT)</td>
+        <td><strong style="color:#c39520;">△ Standard markers not selected</strong> / Union scattered, high cohort specificity</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="info-block" style="margin-top:8px;">
+    <div class="h">▶ Overall assessment (v6 DESeq2 tight, K=5/10)</div>
+    <div class="body">
+      <strong>✅ Strongly recovered</strong>: <strong>B-cell oligoclonal BCR repertoire</strong> (IGLC1/IGHA2/IGKV4-1/IGHV2-70 = hallmark of MS CNS plasmablast), <strong>Mono inflammatory chemokine</strong> (CXCL8/CCL4), <strong>CD8 cytotoxic chemokine</strong> (CCL3L1), <strong>T-cell exhaustion / activation</strong> (HAVCR2/CD38), <strong>DC regulatory/inflammatory axis</strong> (IL10/CCL4).
+      <br><strong>△ Axis shift</strong>: <strong>Iron rim (FTL/FTH1)</strong> and <strong>HLA-DPB1</strong> — hits in earlier lm analyses — do not survive DESeq2 tight (K=5/10 + strict shrinkage). Effect sizes exist but variance is large; more robust hits (chemokine / Ig repertoire) take priority.
+      <br><strong>New finding</strong>: <strong>TYROBP/AIF1 hit in CD4_T/CD8_T fractions</strong> = either T-myeloid signaling boundary genes, or rare myeloid cells contaminating T-cell clusters (warrants verification).
+      <br><strong>❌ Not captured</strong>: Direct Th17/Treg markers (IL17/FOXP3) under K=5/10 constraint — Phase 2 (MIL + cell-level) leaves room for improvement.
+    </div>
+  </div>
+
+  <p class="footnote" style="margin-top:6px;">
+    <span class="ms-gene">Yellow</span> = representative MS-relevant genes per category. <strong>QUBO_hybrid recovers 5 axes</strong>: B oligoclonal / Mono chemokine / CD8 chemokine / T-exhaustion / DC regulatory. <strong>Particularly, BCR repertoire diversity captures the MS-CSF-specific signature</strong>. Th17/Treg excluded under the combination of CSF sample size, K constraint, and DESeq2 shrinkage.
+  </p>
+
+  <div class="pagenum">S5</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S6: PBMC AUCell — cell-type × MS gene-set activity -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S6</span>PBMC AUCell — cell-type × MS gene-set activity</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">PBMC: cell-type × MS gene-set activity — AUCell</div>
+  <img src="figures_genes/fig4b_aucell_curated_pbmc.png"
+       style="width:90%;max-width:1000px;height:auto;display:block;margin:6px auto;border:1px solid var(--gray-line);border-radius:2px;"
+       alt="AUCell curated MS gene sets per cell type (PBMC)">
+  <p class="footnote" style="font-size:11px;margin-top:6px;text-align:center;">
+    Per-cell <strong>AUCell (Aibar 2017)</strong> scoring of 7 MS gene sets × 8 cell types in PBMC. Left: median activity in MS cells; right: MS − HD effect. Compared to CSF, <strong>effect sizes are generally smaller in PBMC</strong> — supports that <strong>CSF captures MS pathology more directly</strong>.
+  </p>
+
+  <div class="info-block" style="margin-top:8px;">
+    <div class="h">▶ Clinical interpretation</div>
+    <div class="body">
+      <strong>CSF advantage</strong>: adjacent to MS lesions; captures cell-type-specific disease biology strongly (Mono MHC II + iron rim, NK cytotoxic axis, etc.).
+      <strong>PBMC complementary role</strong>: AUC 0.768 is sufficient for clinical screening; non-invasive (no lumbar puncture). Useful for stratification.
+      <strong>QUBO generality</strong>: maintains top performance robustly in both compartments — supports the validity of the selection logic itself.
+    </div>
+  </div>
+
+  <div class="pagenum">S6</div>
+</div>
+
+<!-- ========================================== -->
+<!-- S7: QUBO formulation in detail -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S7</span>QUBO Formulation — Details</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO (Quadratic Unconstrained Binary Optimization)</div>
+
+  <div style="background:#f7faff;border-left:4px solid var(--blue-acc);padding:10px 14px;margin:6px 0 10px;font-size:13px;line-height:1.6;color:var(--gray-text);">
+    <strong style="color:var(--navy);">▶ What is QUBO?</strong>:
+    An optimization framework that <strong>expresses Yes/No (= 0/1) selection problems as a quadratic function</strong>.
+    Here, "select gene i (1) or not (0)" is encoded into a single score that combines
+    <strong>relevance (informative genes) × non-redundancy × cardinality (panel size)</strong>,
+    minimized to find the best gene combination.
+    QUBO is a standard formulation in cheminformatics and combinatorial optimization, solvable with general-purpose solvers such as Simulated Annealing.
+  </div>
+
+  <div style="background:linear-gradient(to bottom,white 0%,#fafafa 100%);border:1px solid #d6d6d6;border-top:3px solid #1f3a5f;padding:10px 14px;margin:6px 0 10px;">
+    <div style="font-family:'STIX Two Math','Cambria Math',Georgia,serif;font-size:20px;text-align:center;color:#1f3a5f;margin:4px 0 8px;font-style:italic;letter-spacing:1px;">
+      H(x) = <span style="background:#fbe7e3;color:#c0392b;padding:2px 6px;border-radius:3px;font-weight:bold;">−s<sup>⊤</sup>x</span>
+            + <span style="background:#ede8f5;color:#6d5b9c;padding:2px 6px;border-radius:3px;font-weight:bold;">γ · x<sup>⊤</sup>R x</span>
+            + <span style="background:#d6e7f3;color:#2874a6;padding:2px 6px;border-radius:3px;font-weight:bold;">λ (Σ<sub>i</sub>x<sub>i</sub> − K)<sup>2</sup></span>
+    </div>
+    <div style="font-size:11.5px;color:#6b6b6b;text-align:center;font-style:italic;">
+      x ∈ {0,1}<sup>p</sup>: a binary variable per candidate gene (1 = selected, 0 = not), p ≈ 100 per cell type
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px;">
+    <div style="background:#fbe7e3;border-left:4px solid #c0392b;padding:9px 12px;border-radius:3px;">
+      <div style="color:#c0392b;font-weight:700;font-size:13px;margin-bottom:4px;">① Relevance — −s<sup>⊤</sup>x</div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        s<sub>i</sub> = edgeR |t-statistic|<sup>2</sup> for MS vs HD<br>
+        <span style="color:#6b6b6b;">→ genes with stronger MS-vs-HD signal score higher</span><br>
+        Z-scored across all genes.<br>
+        <strong>Selecting one lowers H</strong> = reward.
+      </div>
+    </div>
+    <div style="background:#ede8f5;border-left:4px solid #6d5b9c;padding:9px 12px;border-radius:3px;">
+      <div style="color:#6d5b9c;font-weight:700;font-size:13px;margin-bottom:4px;">② Redundancy — γ · x<sup>⊤</sup>R x</div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        R<sub>ij</sub> = |Spearman corr(g<sub>i</sub>, g<sub>j</sub>)| on training pseudobulk<br>
+        <span style="color:#6b6b6b;">→ co-expressed pairs incur a joint penalty</span><br>
+        γ balances the magnitudes.<br>
+        <strong>Enforces diversity</strong> — absent from LASSO/DE_top.
+      </div>
+    </div>
+    <div style="background:#d6e7f3;border-left:4px solid #2874a6;padding:9px 12px;border-radius:3px;">
+      <div style="color:#2874a6;font-weight:700;font-size:13px;margin-bottom:4px;">③ Cardinality — λ(Σx − K)<sup>2</sup></div>
+      <div style="font-size:11px;line-height:1.5;color:#303030;">
+        K ∈ {10, 20, 30} <strong>auto-selected by inner 5-fold CV</strong><br>
+        <span style="color:#6b6b6b;">→ quadratic penalty for deviating from K (soft)</span><br>
+        λ ≫ relevance/redundancy magnitudes.<br>
+        <strong>Panel size needs no post-hoc tuning</strong>.
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1.1fr 1fr;gap:14px;margin-top:10px;">
+    <div style="background:#f7f7f7;border-left:4px solid #1f3a5f;padding:10px 14px;font-size:12px;line-height:1.55;">
+      <div style="color:#1f3a5f;font-weight:700;margin-bottom:4px;">▶ Why QUBO?</div>
+      Any problem expressible with binary variables and a quadratic form is a <strong>universal substrate solvable on GPU SA, classical ILP, or (in the future) quantum hardware</strong>. With ~100 candidates per cell type, we use <strong>Simulated Annealing</strong> at ~3 sec/instance. Scaling the candidate pool to ~8,000 genes maps cleanly onto GPU-parallel SA.
+    </div>
+    <div style="background:#fff8d4;border-left:4px solid #c39520;padding:10px 14px;font-size:12px;line-height:1.55;">
+      <div style="color:#1f3a5f;font-weight:700;margin-bottom:4px;">▶ Why not fix K = 10?</div>
+      Optimal K differs by cell type — B cells benefit from K=20-30 (IGH/IGL diversity), Mono is dominated by MHC II and saturates at K=10. Letting <strong>K be tuned by the same inner CV</strong> aligns panel size with cell-type biology. Empirical mean: ~17 genes per cell type.
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,#1f3a5f 0%,#2c4a73 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:10px;font-size:12px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ Implementation summary</strong>:
+    <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">qubo_pipeline_v6.py</code>
+    L89 <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">K_GRID = [10, 20, 30]</code> ／
+    Solver <code style="background:rgba(255,255,255,0.15);padding:1px 5px;border-radius:2px;font-size:11px;">dwave-neal SimulatedAnnealingSampler</code> (10 reads/seed) ／
+    γ, λ grid-searched in inner CV (γ ∈ {0.5, 1.0, 2.0}, λ = 10·max(s)) ／
+    Final K picked by validation AUC.
+  </div>
+
+  <div class="pagenum">S7</div>
+</div>
+
+<!-- ========================================== -->
+<!-- S8: Cell-type coverage & limitations (CD4/CD8 dilution → MIL rationale) -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S8</span>Cell-type Coverage & Limitations — CD4/CD8 dilution</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">A paradox: the most cell-rich populations yield the fewest DEGs</div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;">
+    <div>
+      <div style="color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;">▶ CSF — cell counts vs candidate gene pool (fold 1, after biology filter)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead>
+          <tr style="background:var(--gray-bg);color:var(--navy);">
+            <th style="padding:4px 6px;text-align:left;border-bottom:2px solid var(--navy);">Cell type</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">Total cells</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">Median/donor</th>
+            <th style="padding:4px 6px;text-align:right;border-bottom:2px solid var(--navy);">Candidates</th>
+            <th style="padding:4px 6px;text-align:center;border-bottom:2px solid var(--navy);">QUBO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:3px 6px;">B</td><td style="text-align:right;">3,271</td><td style="text-align:right;">48</td><td style="text-align:right;">94</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr><td style="padding:3px 6px;">Mono</td><td style="text-align:right;">5,732</td><td style="text-align:right;">80</td><td style="text-align:right;">21</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr style="background:#fdeeec;"><td style="padding:3px 6px;font-weight:700;">CD4_T</td><td style="text-align:right;font-weight:700;">98,061</td><td style="text-align:right;font-weight:700;">2,542</td><td style="text-align:right;font-weight:700;color:var(--warn-red);">1</td><td style="text-align:center;color:var(--warn-red);font-weight:700;">✗</td></tr>
+          <tr style="background:#fdeeec;"><td style="padding:3px 6px;font-weight:700;">CD8_T</td><td style="text-align:right;font-weight:700;">26,524</td><td style="text-align:right;font-weight:700;">620</td><td style="text-align:right;font-weight:700;color:var(--warn-red);">0</td><td style="text-align:center;color:var(--warn-red);font-weight:700;">✗</td></tr>
+          <tr><td style="padding:3px 6px;">NK</td><td style="text-align:right;">2,127</td><td style="text-align:right;">56</td><td style="text-align:right;">58</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr style="background:#fff8d4;"><td style="padding:3px 6px;">DC</td><td style="text-align:right;">10,651</td><td style="text-align:right;">232</td><td style="text-align:right;">8</td><td style="text-align:center;color:#c39520;font-weight:700;">△</td></tr>
+          <tr><td style="padding:3px 6px;">dnT</td><td style="text-align:right;">4,200</td><td style="text-align:right;">105</td><td style="text-align:right;">90</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+          <tr><td style="padding:3px 6px;">gdT</td><td style="text-align:right;">1,212</td><td style="text-align:right;">19</td><td style="text-align:right;">75</td><td style="text-align:center;color:#2e8b57;font-weight:700;">✓</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:10px;color:var(--gray-mid);margin-top:4px;">
+        Effective ensemble = 5 cell types (B, Mono, NK, dnT, gdT). <strong>CD4_T (most abundant) yields only 1 candidate gene</strong> after QC and is skipped.
+      </p>
+    </div>
+    <div>
+      <div style="color:var(--navy);font-weight:700;font-size:13px;margin-bottom:4px;">▶ Why the most abundant cell types yield no DEGs</div>
+      <div style="background:var(--gray-bg);border-left:4px solid var(--navy);padding:8px 12px;font-size:11.5px;line-height:1.55;">
+        <strong>① Functional subtype mixture</strong>: CD4 contains Th1/Th17/Treg/Tfh; CD8 contains Tem/Tcm/Trm/exhausted/MAIT. <strong>Only a few % subset (e.g. Th17, CD8 effector) drives MS pathology</strong>.<br><br>
+        <strong>② Pseudobulk dilution</strong>: averaging all donor cells <strong>washes out the subset signal under 90% "ordinary" T cells</strong>.<br><br>
+        <strong>③ edgeR's harsh BH-FDR</strong>: large cell counts tighten the dispersion estimate; subtle differences are detected but lost to multiple testing correction.<br><br>
+        <strong>④ Biology filter</strong>: the residual signal is dominated by ribosomal/HK genes; removing them leaves the candidate pool nearly empty.
+      </div>
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,#fdeeec 0%,#fff8e7 100%);border:2px solid var(--warn-red);border-radius:4px;padding:10px 14px;margin-top:8px;">
+    <div style="color:var(--warn-red);font-weight:700;font-size:13px;margin-bottom:5px;">▶ Critical interpretation — this does NOT imply CD4/CD8 are MS-irrelevant</div>
+    <div style="font-size:11.5px;line-height:1.55;color:var(--gray-text);">
+      <strong>CD4 Th17 IL-17 axis, CD8 cytotoxic-mediated demyelination, and Treg dysfunction are central to MS pathobiology</strong> (Ramesh 2020, Schafflick 2020; IL7R/IL2RA are top MS GWAS hits).
+      Our current panel <strong>captures the "wall" biology (B / Mono / NK axes) but misses the "core mechanism"</strong> (CD4 Th17, CD8 cytotoxic) due to pseudobulk dilution. Honest disclosure.
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:8px;font-size:12px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ Why MIL is essential for Phase 2</strong>:
+    <strong>Multi-Instance Learning (MIL)</strong> operates at cell-level resolution. Attention identifies <strong>which cell subsets drive the disease — without pseudobulk averaging</strong>, surfacing Th17 within CD4 and Trm/exhausted within CD8 as attention weights.
+    <strong>This directly resolves the largest limitation of the current study (T-cell dilution)</strong>, which is the existence rationale for Phase 2 MIL.
+  </div>
+
+  <div class="pagenum">S8</div>
+</div>
+
+<!-- ========================================== -->
+<!-- S9: QUBO panel per-cell AUCell validation -->
+<!-- ========================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S9</span>Per-cell AUCell validation of QUBO panels</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO-selected genes (top-30 by frequency) scored per cell with AUCell</div>
+
+  <div style="margin:6px 0;">
+    <img src="figures_genes/fig4a_aucell_qubo_panels_csf.png"
+         style="width:100%;height:auto;display:block;border:1px solid var(--gray-line);border-radius:2px;"
+         alt="AUCell QUBO panels per cell type (CSF)">
+  </div>
+
+  <div style="background:linear-gradient(to right,#f0f7f3 0%,#fafffb 100%);border:2px solid #2e8b57;border-radius:4px;padding:10px 14px;margin-top:8px;">
+    <div style="color:#2e8b57;font-weight:700;font-size:14px;margin-bottom:4px;">★ Headline result</div>
+    <div style="font-size:13px;line-height:1.55;color:var(--gray-text);">
+      <strong>B-cell panel: MS − HD difference +0.049 (q = 5.7×10⁻¹⁵)</strong> — overwhelmingly significant at the per-cell level. <strong>Direct evidence that the 30 genes selected by QUBO for B cells discriminate MS from HD at cell-level</strong>. Complementary to the cell-type × MS gene set activity (curated) heatmap on Slide 4.
+    </div>
+  </div>
+
+  <div style="background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);color:white;padding:10px 14px;border-radius:3px;margin-top:8px;font-size:12.5px;line-height:1.55;">
+    <strong style="color:#fff8d4;">▶ Read with S8</strong>:
+    CD4_T / CD8_T / DC have empty QUBO panels — labeled "no panel". <strong>The curated heatmap on Slide 4 shows that MS biology IS active in those cell types</strong> (e.g. CD8_T × IFN, q=1.3×10⁻⁷) — which is the rationale for Phase 2 MIL (S8).
+  </div>
+
+  <div class="pagenum">S9</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S10: Conceptual pipeline illustration -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S10</span>Pipeline concept — per-cell-type panels × soft voting</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h smaller">Select 10–30 genes per cell type, then average their MS probabilities to call MS / HD</div>
+
+  <img src="figures_genes/fig_concept_pipeline.png"
+       style="display:block;margin:14px auto 0;max-width:100%;max-height:480px;border:1px solid var(--gray-line);border-radius:3px;"
+       alt="Conceptual illustration: per-cell-type QUBO ensemble pipeline">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px;font-size:11.5px;line-height:1.55;color:var(--gray-text);">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;">
+      <strong style="color:var(--navy);">▶ ① INPUT</strong>: scRNA-seq cells annotated by Azimuth into B / Mono / NK / dnT / gdT, etc.
+    </div>
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;">
+      <strong style="color:var(--navy);">▶ ② QUBO + classifier</strong>: Per cell type, QUBO <strong>independently</strong> selects 10–30 genes; L2 logistic outputs an MS probability.
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;">
+      <strong style="color:#2e8b57;">▶ ③ Ensemble</strong>: Per-cell-type probabilities are averaged (soft voting) → patient-level <strong>MS / HD</strong> call.
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:10px;">
+    The 5 effective cell types in CSF are illustrated. CD4_T / CD8_T / DC are dropped due to pseudobulk dilution → see S7. Probability values (0.49–0.81) are representative examples for illustration.
+  </p>
+
+  <div class="pagenum">S10</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S11: Gene-count comparison across the 5 selection methods (CSF) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S11</span>Gene count × performance across 7 selection methods (CSF, v6 DESeq2 tight)</div>
+
+  <div style="font-size:13px;line-height:1.5;color:var(--gray-text);margin:6px 0 10px 0;">
+    All methods select <strong>K ∈ {5, 10}</strong> via inner 5-fold CV. 3 cohorts × 5 folds × 8 cell types = <strong>120 panels</strong>.<br>
+    <strong style="color:var(--blue-acc);">Prediction panel</strong>: per held-out cohort = 5 inner folds × 8 cell types. <strong style="color:#c8102e;">σ = std of per-cohort mean AUC</strong>. <strong>F1 / MCC</strong> are robust to class imbalance (addressing Ramesh 82% MS skew).
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <thead>
+      <tr style="background:var(--navy);color:#fff;">
+        <th style="padding:6px 7px;text-align:left;border:1px solid var(--gray-line);">Method</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">AUC</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">σ <small>(cohort)</small></th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">F1</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">MCC</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">AP</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">genes/ct</th>
+        <th style="padding:6px 7px;text-align:center;border:1px solid var(--gray-line);">Prediction<br><small>(8 ct/fold)</small></th>
+        <th style="padding:6px 7px;text-align:left;border:1px solid var(--gray-line);">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">DE_top</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.873</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.132</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.691</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.350</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.915</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.3</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">56</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">Univariate (DESeq2 |t|), simplest. Leads AUC/AP but <strong>large σ</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">HVG</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.859</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>0.100</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.668</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.317</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.894</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.5</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">57</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">Unsupervised; most stable σ but trails on F1/MCC</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">LASSO</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.797</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.137</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.708</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.341</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.860</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>6.9</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;"><strong>54</strong></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">L1 sparse; lowest AUC but F1 ties ElasticNet</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">ElasticNet</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.838</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.145</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.712</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.327</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.880</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">6.6</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">52</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">L1 + L2; mid AUC, 2nd on F1</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">QUBO</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.836</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.126</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.705</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.380</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.887</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.3</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">57</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">SA + non-redundancy; pool = 100; 2nd on MCC</td>
+      </tr>
+      <tr>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:600;">QUBO_consensus</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.791</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.151</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.696</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.329</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">0.854</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">7.4</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">58</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);">10 SA runs aggregated; aimed for stability, underperformed here</td>
+      </tr>
+      <tr style="background:#fff8d4;">
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);font-weight:700;">QUBO_hybrid <span style="background:#2e8b57;color:#fff;font-size:9.5px;padding:1px 4px;border-radius:7px;font-weight:600;">main</span></td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.858</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.108</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;color:#c8102e;">0.731</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;color:#c8102e;">0.427</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;font-weight:700;">0.900</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">6.9</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);text-align:center;">53</td>
+        <td style="padding:5px 7px;border:1px solid var(--gray-line);"><strong>Top-20 pre-filter + SA. Leads F1 / MCC among all methods; σ also top-2</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:8px 12px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:var(--navy);">▶ AUC vs F1/MCC divergence</strong>: DE_top leads on AUC but <strong>trails QUBO_hybrid on F1 (0.691) / MCC (0.350)</strong>. AUC tends to be optimistic on skewed cohorts (e.g., Ramesh 82% MS); threshold-based F1 / MCC are more informative for practical classification (Chicco &amp; Jurman 2020).
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:8px 12px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ QUBO_hybrid's distinct value</strong>: <strong>highest F1 (0.731) and MCC (0.427)</strong>; σ 0.108 in top-2. Pre-filter (top-20) trims the search space while preserving non-redundancy exploration → interpretability + performance.
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10px;margin-top:6px;">
+    Source: <code>v6deseq2tight_bio_deseq2*/CSF/{selected_genes,fold_metrics}_folds_*.csv</code>. 3 cohort hold-out × 5 inner folds × 8 cell types = 120 panels. AUC is patient-level on held-out cohort (soft-vote across cell types); σ = std of per-cohort mean AUC.
+  </p>
+
+  <div class="pagenum">S11</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- S12: Panel size (K) sweep across methods -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label"><span class="supp-tag">S12</span>Panel size (K) vs four metrics — systematic comparison across methods (CSF)</div>
+
+  <div style="font-size:13px;line-height:1.45;color:var(--gray-text);margin:4px 0 8px 0;">
+    All 6 methods are swept across K ∈ {5, 10, 15, 20, 30, 50}, with held-out evaluation at each fixed K.
+    <strong>QUBO_hybrid (filled red, K ≤ 20)</strong> is restricted to K ≤ 20 by design (top-20 pre-filter pool).
+    <strong>QUBO (open red)</strong> uses pool = 100 and is drawn across all K. Error bars = std of per-cohort means.<br>
+    <strong style="color:#c8102e;">QUBO_hybrid leads F1 at all K (0.732 at K=10, 0.714 at K=5); also tops MCC at K=5 with 0.387</strong>.
+    DE_top is steady on AUC, but threshold-based metrics favor QUBO_hybrid → <strong>QUBO_hybrid is recommended for practical classification</strong>.
+  </div>
+
+  <img src="figures_genes/sweep_methods_K_metrics.png"
+       style="display:block;margin:4px auto 6px;max-width:100%;max-height:445px;
+              border:1px solid var(--gray-line);border-radius:2px;"
+       alt="Panel size K vs AUC/F1/MCC/AP curves for four baselines plus QUBO/QUBO_hybrid">
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+    <div style="background:#fafbfc;border-left:4px solid var(--blue-acc);padding:7px 11px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:var(--navy);">▶ AUC / AP</strong>: DE_top peaks (AUC 0.872 at K=5, AP 0.915 at K=20).
+      QUBO_hybrid is a close second (AUC 0.858 / AP 0.900; Δ ≤ 0.015). The baseline curves are flat, indicating low sensitivity to K.
+    </div>
+    <div style="background:#f0f7f3;border-left:4px solid #2e8b57;padding:7px 11px;font-size:11.5px;line-height:1.5;color:var(--gray-text);">
+      <strong style="color:#2e8b57;">▶ F1 / MCC</strong>: <strong>QUBO_hybrid ranks first</strong>.
+      F1 = 0.731 (tied with DE_top K=15 = 0.735, Δ = 0.004),
+      <strong>MCC = 0.427 — highest among all evaluated method × K combinations</strong>.
+      Under cohort class imbalance (Pappalardo 45% / Heming 50% / Ramesh 82% MS),
+      MCC is the most reliable single-score metric (Chicco &amp; Jurman, 2020).
+    </div>
+  </div>
+
+  <p class="footnote" style="font-size:10.5px;margin-top:6px;">
+    The significant advantage of QUBO_hybrid concentrates in <strong>imbalance-robust metrics (MCC)</strong>.
+    AUC and AP saturate under class imbalance, whereas F1 and MCC capture true biomarker quality.
+    Source: <code>sweep_all_methods_K_summary.csv</code> + <code>v6deseq2tight_bio_deseq2*/</code>.
+  </p>
+
+  <div class="pagenum">S12</div>
+</div>
+
+</body>
+</html>

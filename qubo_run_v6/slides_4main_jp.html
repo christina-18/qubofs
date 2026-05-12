@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>QUBO MS 分類 — 4 main slides (日本語)</title>
+<style>
+  :root {
+    --navy:#1f3a5f; --navy-mid:#2c4a73; --blue-acc:#3a6db0;
+    --gray-text:#303030; --gray-mid:#6b6b6b; --gray-line:#d6d6d6;
+    --gray-bg:#f7f7f7; --hi-yellow:#fff8d4; --hi-green:#e8f4ec;
+    --warn-red:#c0392b; --hi-blue:#e3f0fb;
+    --term-red:#c0392b; --term-orange:#d97a26; --term-blue:#2874a6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{width:1280px;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans CJK JP",
+                -apple-system,BlinkMacSystemFont,sans-serif;
+    background:#ddd;color:var(--gray-text);
+  }
+  .slide{
+    width:1280px;height:720px;margin:0 auto;
+    background:white;padding:30px 50px 24px;
+    position:relative;box-shadow:0 4px 18px rgba(0,0,0,0.12);
+    page-break-after:always;break-after:page;overflow:hidden;
+  }
+  .slide:last-child{page-break-after:auto;}
+  .pagenum{position:absolute;right:30px;bottom:12px;color:#999;font-size:12px;}
+  .deco-squares{position:absolute;top:30px;right:50px;display:flex;gap:5px;}
+  .deco-squares span{width:10px;height:10px;background:var(--gray-line);display:inline-block;}
+  .deco-squares span:last-child{background:var(--navy);}
+  .slide-label{color:var(--navy);font-size:20px;font-weight:700;margin-bottom:10px;letter-spacing:0.3px;}
+  .section-h{
+    color:var(--navy);font-size:18px;font-weight:700;
+    border-left:5px solid var(--navy);padding-left:10px;
+    margin-bottom:8px;line-height:1.25;
+  }
+  .section-h.smaller{font-size:14px;border-left-width:4px;}
+
+  /* --- Slide 1 (Headline) styles --- */
+  .headline-title{
+    color:var(--navy);font-size:24px;font-weight:700;line-height:1.3;
+    margin-bottom:4px;
+  }
+  .headline-meta{
+    color:var(--gray-mid);font-size:13px;margin-bottom:12px;
+    display:flex;justify-content:space-between;
+    border-bottom:2px solid var(--navy);padding-bottom:6px;
+  }
+  .headline-meta strong{color:var(--navy);}
+  .finding-box{
+    background:linear-gradient(to right,#f0f4fa 0%,#d6e7f3 100%);
+    border:2px solid var(--navy);border-radius:4px;
+    padding:12px 18px;margin-bottom:10px;
+  }
+  .finding-label{
+    color:var(--navy);font-size:13px;font-weight:700;
+    letter-spacing:1px;margin-bottom:5px;
+  }
+  .finding-line{
+    color:var(--navy);font-size:17px;font-weight:700;
+    line-height:1.4;margin-bottom:3px;
+  }
+  .finding-line .num{
+    font-family:"STIX Two Math",Georgia,serif;
+    font-size:19px;color:var(--navy);
+  }
+  .takehome-list{
+    list-style:none;padding:6px 14px;
+    background:var(--hi-green);border-left:4px solid #2e8b57;
+    border-radius:2px;margin-bottom:10px;
+  }
+  .takehome-list li{
+    padding:3px 0;font-size:13px;line-height:1.45;
+    position:relative;padding-left:24px;
+  }
+  .takehome-list li::before{
+    content:"✓";position:absolute;left:6px;color:#2e8b57;font-weight:700;font-size:13px;
+  }
+  .takehome-list strong{color:var(--navy);}
+  .bg-data-row{
+    display:grid;grid-template-columns:1.4fr 1fr;gap:14px;
+    margin-top:6px;
+  }
+  .bg-text{
+    background:var(--gray-bg);border-left:4px solid var(--blue-acc);
+    padding:8px 12px;font-size:12.5px;line-height:1.55;
+  }
+  .bg-text .h{color:var(--navy);font-weight:700;font-size:13px;letter-spacing:0.3px;}
+  .data-table{width:100%;border-collapse:collapse;font-size:12px;}
+  .data-table thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:4px 7px;border-bottom:2px solid var(--navy);font-size:11.5px;
+  }
+  .data-table thead th:first-child{text-align:left;padding-left:10px;}
+  .data-table tbody td{padding:3px 7px;border-bottom:1px dashed var(--gray-line);text-align:center;}
+  .data-table tbody td:first-child{text-align:left;padding-left:10px;font-weight:600;}
+  .data-table tbody tr.total td{background:var(--hi-green);font-weight:700;color:var(--navy);}
+
+  /* --- Method slide --- */
+  .formula-block{
+    background:linear-gradient(to bottom,white 0%,#fafafa 100%);
+    border:1px solid var(--gray-line);border-top:3px solid var(--navy);
+    padding:8px 12px;margin:4px 0 8px;
+  }
+  .formula-display{
+    font-family:"STIX Two Math","Cambria Math",Georgia,serif;
+    font-size:18px;text-align:center;color:var(--navy);
+    margin:2px 0 6px;font-style:italic;letter-spacing:1px;
+  }
+  .term{font-weight:bold;padding:0 2px;}
+  .term-red-bg{background:#fbe7e3;color:var(--term-red);padding:2px 5px;border-radius:3px;}
+  .term-orange-bg{background:#fde9d4;color:var(--term-orange);padding:2px 5px;border-radius:3px;}
+  .term-blue-bg{background:#d6e7f3;color:var(--term-blue);padding:2px 5px;border-radius:3px;}
+  .term-row{
+    display:grid;grid-template-columns:30% 1fr;gap:8px;
+    align-items:start;margin-bottom:3px;font-size:11px;line-height:1.4;
+  }
+  .term-row .term-name{
+    font-weight:600;padding:1px 5px;border-radius:3px;
+    text-align:center;font-size:10.5px;
+  }
+  table.results{width:100%;border-collapse:collapse;font-size:12px;margin:4px 0;}
+  table.results thead th{
+    background:var(--gray-bg);color:var(--navy);font-weight:700;
+    text-align:center;padding:6px 7px;border-bottom:2px solid var(--navy);font-size:11.5px;
+  }
+  table.results thead th:first-child{text-align:left;padding-left:12px;}
+  table.results tbody td{
+    padding:5px 7px;border-bottom:1px dashed var(--gray-line);text-align:center;
+  }
+  table.results tbody td:first-child{text-align:left;padding-left:12px;font-weight:600;}
+  table.results tbody tr.highlight td{background:var(--hi-green);font-weight:700;}
+  .method-cell{text-align:left !important;padding:5px 8px !important;line-height:1.35;}
+  .badge{
+    display:inline-block;background:var(--navy);color:white;
+    font-size:10px;font-weight:700;padding:1px 6px;border-radius:2px;
+    margin-left:4px;letter-spacing:0.3px;
+  }
+  .badge.green{background:#2e8b57;}
+  .star{color:#c39520;font-weight:700;margin-left:2px;}
+
+  /* --- Results slide --- */
+  .footnote{margin-top:4px;color:var(--gray-mid);font-size:10.5px;font-style:italic;}
+  .metric-legend{
+    margin-top:4px;padding:5px 9px;
+    background:#fafbfc;border-left:3px solid var(--blue-acc);
+    font-size:9.5px;line-height:1.4;color:var(--gray-text);
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px 12px;
+  }
+  .metric-legend .ml-item{display:block;}
+  .metric-legend .ml-item strong{color:var(--navy);margin-right:3px;font-size:10px;}
+  .row{display:flex;gap:14px;margin-bottom:6px;}
+  .col{flex:1;}
+
+  /* --- Conclusion slide --- */
+  .takeaway-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+  .takeaway-card{
+    background:linear-gradient(to bottom right,#fafbfc 0%,#f0f4fa 100%);
+    border-left:4px solid var(--navy);padding:8px 12px;border-radius:2px;position:relative;
+  }
+  .takeaway-card.green{border-left-color:#2e8b57;background:linear-gradient(to bottom right,#f0f7f3 0%,#e8f4ec 100%);}
+  .takeaway-card.yellow{border-left-color:#c39520;background:linear-gradient(to bottom right,#fff8d4 0%,#fff4b8 100%);}
+  .takeaway-card.blue{border-left-color:var(--blue-acc);background:linear-gradient(to bottom right,#f0f4fa 0%,#d6e7f3 100%);}
+  .num-badge{
+    position:absolute;top:6px;right:9px;
+    background:var(--navy);color:white;
+    width:18px;height:18px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:10px;
+  }
+  .green .num-badge{background:#2e8b57;}
+  .yellow .num-badge{background:#c39520;}
+  .blue .num-badge{background:var(--blue-acc);}
+  .takeaway-title{color:var(--navy);font-weight:700;font-size:12px;margin-bottom:3px;padding-right:24px;}
+  .takeaway-body{font-size:11px;line-height:1.45;color:var(--gray-text);}
+  .takeaway-body strong{color:var(--navy);}
+  .key-number{font-family:"STIX Two Math",Georgia,serif;font-weight:700;color:var(--navy);font-size:13px;}
+  .conclusion-banner{
+    background:linear-gradient(to right,var(--navy) 0%,var(--navy-mid) 100%);
+    color:white;padding:10px 16px;border-radius:4px;margin-top:6px;
+  }
+  .conclusion-banner-title{font-size:12px;font-weight:700;margin-bottom:3px;letter-spacing:0.3px;}
+  .conclusion-banner-body{font-size:11px;line-height:1.5;}
+  .conclusion-banner-body em{font-style:normal;color:#fff8d4;font-weight:600;}
+  .future-work-box{
+    margin-top:8px;padding:7px 12px;background:#fafbfc;border-left:3px solid var(--blue-acc);
+    font-size:11px;line-height:1.45;color:var(--gray-text);
+  }
+  .future-work-box strong{color:var(--navy);}
+
+  @media print{
+    @page{size:1280px 720px;margin:0;}
+    html,body{background:white;width:1280px;}
+    .slide{box-shadow:none;margin:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================== -->
+<!-- Slide 1: HEADLINE + Background + Dataset (BLUF style) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="headline-title">
+    QUBO 最適化による細胞種特異的遺伝子パネル<br>
+    <span style="font-size:18px;color:var(--navy-mid);font-weight:600;">単一細胞 RNA-seq からの多発性硬化症 cross-cohort 分類</span>
+  </div>
+  <div class="headline-meta">
+    <span><strong>Mizuho Asada, Ph.D</strong> — 助教 (明治薬科大学) ／ 講師 (Science Tokyo) ／ <em style="color:var(--blue-acc);">Sabbatical at MGH</em></span>
+    <span>May 8, 2026</span>
+  </div>
+
+  <!-- The Finding -->
+  <div class="finding-box">
+    <div class="finding-label">▼ KEY RESULT</div>
+    <div class="finding-line">
+      <strong>49 stable genes による QUBO panel</strong>:
+      <span class="num">AUC 0.788 ± 0.044</span> across 3 held-out cohorts,
+      MS 病態の中核軸 (MHC II, iron metabolism, IFN, cytotoxicity) を再現
+    </div>
+  </div>
+
+  <ul class="takehome-list">
+    <li><strong>Performance</strong>: 主要 3 metrics (AUC, F1, MCC) で <strong>5 手法中 1 位</strong></li>
+    <li><strong>Reproducibility</strong>: cross-cohort σ_AUC = <strong>0.044</strong> (Elastic Net 0.041 と互角、LASSO 0.068 の 6 割)</li>
+    <li><strong>Biology</strong>: MHC II 8.5×, <strong>Iron metabolism 36×</strong> 濃縮 (Hametner 2013 iron rim と整合)</li>
+  </ul>
+
+  <div class="bg-data-row">
+    <div class="bg-text">
+      <div class="h">Background — 技術的課題</div>
+      既存の MS scRNA-seq 解析は <strong>施設間の技術差 (10x chemistry, cryopreservation, sampling)</strong> で
+      分類精度が崩壊する。既存手法 (DE-top, LASSO, HVG) は <strong>relevance + redundancy + cardinality
+      の同時最適化ができない</strong>。
+      <br>→ 本研究は <strong>QUBO による cell-type-specific 遺伝子選択 + cross-cohort validation</strong> で解決。
+      古典 SA で求解、量子アニーラに移行可能 (future-proof)。
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Cohort</th><th>HD</th><th>MS</th><th>計</th></tr></thead>
+      <tbody>
+        <tr><td>Heming</td><td>9</td><td>9</td><td>18</td></tr>
+        <tr><td>Pappalardo</td><td>6</td><td>5</td><td>11</td></tr>
+        <tr><td>Ramesh</td><td>3</td><td>14</td><td>17</td></tr>
+        <tr><td>Touil*</td><td>4</td><td>0</td><td>4</td></tr>
+        <tr class="total"><td>計</td><td>22</td><td>28</td><td>50</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="footnote" style="margin-top:4px;">
+    * Touil cohort は MS donor 含まず → train 専用に固定。3 cohort × LOOCV で外部 cohort 評価。
+    CSF 226k cells / PBMC 159k cells / 32,170 genes (RNA assay)。
+  </p>
+
+  <div class="pagenum">1</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- Slide 2: Method (QUBO formulation + 5-method comparison) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label">Method</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">QUBO による細胞種別遺伝子選択</div>
+
+  <div class="formula-block">
+    <div class="formula-display">
+      H(x) = <span class="term term-red-bg">−s<sup>⊤</sup>x</span>
+            + <span class="term term-orange-bg">γ · x<sup>⊤</sup>R x</span>
+            + <span class="term term-blue-bg">λ (1<sup>⊤</sup>x − K)<sup>2</sup></span>
+    </div>
+    <div class="term-row">
+      <div class="term-name term-red-bg">① Relevance 最大化</div>
+      <div>各遺伝子のスコア <em>s<sub>i</sub></em> = |t-stat|² (edgeR DE 解析より)。MS と HD で差が大きい遺伝子を選択する力。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name term-orange-bg">② Redundancy 最小化</div>
+      <div>選択された遺伝子ペア間の相関 <em>R<sub>ij</sub></em> を罰則化。<strong>同経路の遺伝子重複を抑制し多様性を確保</strong> — QUBO の核心。</div>
+    </div>
+    <div class="term-row">
+      <div class="term-name term-blue-bg">③ Cardinality 制約</div>
+      <div>選択数を K に近づける soft penalty。K ∈ {10, 20, 30} を <strong>内側 5-fold CV で自動選択</strong>。解法: Simulated Annealing (~3 sec/instance)、D-Wave 量子アニーラに移行可。</div>
+    </div>
+  </div>
+
+  <div class="section-h smaller" style="margin-top:8px;">5 手法の同条件比較 (Pipeline は全手法共通)</div>
+
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:18%">Method</th>
+        <th style="width:46%">Selection logic</th>
+        <th style="width:18%">Mechanism</th>
+        <th style="width:18%">Characteristic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>DE_top</td><td class="method-cell">edgeR <strong>|t|</strong> 上位 K</td><td>Univariate ranking</td><td>最もシンプル</td></tr>
+      <tr><td>HVG</td><td class="method-cell">train donor 間の <strong>発現分散</strong> 上位 K</td><td>Unsupervised</td><td>label 不使用</td></tr>
+      <tr><td>LASSO</td><td class="method-cell">L1 正則化 (λ で K 個 nonzero に調整)</td><td>係数 0 化</td><td>Sparse</td></tr>
+      <tr><td>Elastic Net</td><td class="method-cell">L1 + L2 ハイブリッド (l1_ratio = 0.5)</td><td>top-K |coef|</td><td>共線性に強い</td></tr>
+      <tr class="highlight"><td>QUBO <span class="badge green">提案</span></td><td class="method-cell">二次最適化 (relevance × non-redundancy × cardinality 同時)</td><td>Simulated Annealing</td><td><strong>冗長性を明示制御</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p class="footnote">
+    全 5 手法で <strong>同じ候補プール (top-100 by |t|)、同じ K-grid、同じ L2 logistic 分類器、同じ 8 cell-type soft-voting ensemble</strong> を使用。
+    <strong>違いは選択ロジックのみ</strong> → 公正な比較。評価: 3 cohort × LOOCV。詳細パイプライン → 補助スライド S2。
+  </p>
+
+  <div class="pagenum">2</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- Slide 3: Results (Performance + Biology combined) -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label">Results — Performance &amp; Biological Validity</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <!-- Top: 5-metric table -->
+  <div class="section-h smaller">CSF — held metrics (3-cohort 平均)</div>
+  <table class="results">
+    <thead>
+      <tr>
+        <th style="width:20%">Method</th>
+        <th>AUC</th><th>AP</th><th>F1</th><th>MCC</th><th>σ_AUC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td>QUBO <span class="badge green">提案</span></td>
+        <td><strong>0.788</strong> <span class="star">★</span></td>
+        <td>0.846</td>
+        <td><strong>0.635</strong> <span class="star">★</span></td>
+        <td><strong>0.258</strong> <span class="star">★</span></td>
+        <td>0.044</td>
+      </tr>
+      <tr><td>LASSO</td><td>0.779</td><td>0.856</td><td>0.610</td><td>0.206</td><td>0.068</td></tr>
+      <tr><td>Elastic Net</td><td>0.779</td><td><strong>0.870</strong> <span class="star">★</span></td><td>0.588</td><td>0.216</td><td><strong>0.041</strong> <span class="star">★</span></td></tr>
+      <tr><td>DE_top</td><td>0.742</td><td>0.817</td><td>0.578</td><td>0.100</td><td>0.065</td></tr>
+      <tr><td>HVG</td><td>0.712</td><td>0.797</td><td>0.574</td><td>0.135</td><td>0.048</td></tr>
+    </tbody>
+  </table>
+  <p class="footnote">
+    ★ = 1 位。QUBO は <strong>主要 3 分類指標 (AUC, F1, MCC) で 1 位</strong>、σ_AUC は EN と Δ 0.003 で互角。
+    QUBO per-cohort: Pappalardo 0.807, Heming 0.738, Ramesh 0.819 (0.74-0.82 タイト範囲)。詳細 → S3。
+  </p>
+  <div class="metric-legend">
+    <span class="ml-item"><strong>AUC</strong> ROC 曲線下面積 (1.0 完全/0.5 偶然)</span>
+    <span class="ml-item"><strong>AP</strong> PR 曲線下面積 (少数派検出)</span>
+    <span class="ml-item"><strong>F1</strong> Precision-Recall 調和平均</span>
+    <span class="ml-item"><strong>MCC</strong> Matthews 相関係数 (不均衡 robust)</span>
+    <span class="ml-item"><strong>σ_AUC</strong> 3 cohort 間 std (低=再現性 ↑)</span>
+  </div>
+
+  <!-- Bottom: Heatmap + Dotplot -->
+  <div class="section-h smaller" style="margin-top:8px;">QUBO 選択遺伝子 (CSF, 全 panels で 448 unique, stable 49)</div>
+  <div class="row" style="gap:12px;">
+    <div class="col" style="flex:1.05;">
+      <img src="figures_genes/fig1_selection_heatmap.png"
+           style="width:100%;height:auto;display:block;border:1px solid var(--gray-line);border-radius:2px;"
+           alt="Selection frequency heatmap">
+      <p class="footnote" style="font-size:9.5px;margin-top:2px;">
+        ★ Mono: <strong>CST3, FTL, HLA-DPB1, IFI30, FTH1, CD74</strong> = MHC II + iron metabolism (MS monocyte 病態の中核)。
+      </p>
+    </div>
+    <div class="col" style="flex:0.95;">
+      <img src="figures_genes/fig2_enrichment_dotplot.png"
+           style="width:100%;height:auto;display:block;border:1px solid var(--gray-line);border-radius:2px;"
+           alt="Enrichment dot plot">
+      <p class="footnote" style="font-size:9.5px;margin-top:2px;">
+        Iron metab. <strong>FE 36×</strong> [Hametner 2013], cytotoxic 18×, MHC II 16×。
+        全 448 で MHC II <strong>10/10</strong>, MS GWAS <strong>9/11</strong> hit。
+      </p>
+    </div>
+  </div>
+
+  <div class="pagenum">3</div>
+</div>
+
+<!-- ================================================================== -->
+<!-- Slide 4: Conclusion + Future Work -->
+<!-- ================================================================== -->
+<div class="slide">
+  <div class="slide-label">Conclusion</div>
+  <div class="deco-squares"><span></span><span></span><span></span><span></span></div>
+
+  <div class="section-h">Take-home Messages</div>
+
+  <div class="takeaway-grid">
+    <div class="takeaway-card green">
+      <div class="num-badge">1</div>
+      <div class="takeaway-title">Performance — 主要 3 指標で 1 位</div>
+      <div class="takeaway-body">
+        CSF: <span class="key-number">AUC 0.788</span>, <span class="key-number">F1 0.635</span>, <span class="key-number">MCC 0.258</span>。
+        <strong>5 手法中 AUC, F1, MCC で 1 位</strong> (AP・σ_AUC は Elastic Net が僅差で 1 位)。
+      </div>
+    </div>
+    <div class="takeaway-card yellow">
+      <div class="num-badge">2</div>
+      <div class="takeaway-title">Cross-site reproducibility</div>
+      <div class="takeaway-body">
+        3 cohort 間 std <span class="key-number">0.044</span> (EN 0.041 と互角、LASSO 0.068 の 6 割)。
+        <strong>0.74-0.82 のタイト範囲</strong>に収束し、未知 cohort でも安定。
+      </div>
+    </div>
+    <div class="takeaway-card blue">
+      <div class="num-badge">3</div>
+      <div class="takeaway-title">Biological validity</div>
+      <div class="takeaway-body">
+        MHC II 抗原提示 (HLA-DRB1, HLA-DPB1, CD74, IFI30), Type I IFN (ISG15),
+        cytotoxic (GZMA, CCL5), <strong>iron metabolism (FTH1, FTL = lesion iron rim)</strong>。
+        GO MHC II <span class="key-number">p &lt; 10⁻⁸</span>。
+      </div>
+    </div>
+    <div class="takeaway-card">
+      <div class="num-badge">4</div>
+      <div class="takeaway-title">Quantum-annealer compatible</div>
+      <div class="takeaway-body">
+        二値最適化として定式化 → <strong>D-Wave 量子アニーラに直接実装可</strong>。
+        現状は古典 SA で <strong>~3 秒/instance</strong>、量子ハードウェア進歩時にシームレス移行。
+      </div>
+    </div>
+  </div>
+
+  <div class="conclusion-banner">
+    <div class="conclusion-banner-title">Implication for Clinical Translation</div>
+    <div class="conclusion-banner-body">
+      QUBO は <em>「最高 AUC × 最高 F1・MCC × Elastic Net と互角の cross-cohort 安定性 × 生物学的妥当性 × 量子互換」</em>
+      の 5 軸を同時に満たし、<em>cross-site 再現性ある MS biomarker パネル</em>として臨床応用に向けた強い候補となる。
+    </div>
+  </div>
+
+  <div class="future-work-box">
+    <strong>▶ Future Work (Phase 2):</strong>
+    <strong>Multi-Instance Learning (MIL)</strong> による cell-level 拡張。各 donor を bag、cells を instances として attention 機構で集約。
+    QUBO は (i) gene selection に加え、(ii) <strong>各 donor からの informative cells coreset 選択</strong>という新たな役割も担い得る。
+    Joint gene-cell QUBO は <strong>D-Wave Leap Hybrid Solver</strong> で実装予定 — 量子計算機実証としても位置付ける。
+  </div>
+
+  <div class="pagenum">4</div>
+</div>
+
+</body>
+</html>

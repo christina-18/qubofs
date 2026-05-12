@@ -1,0 +1,22 @@
+Solver-independence validation: SA vs iterated Tabu Search
+======================================================================
+
+QUBO_hybrid configuration (pool=20, K=10, λ=5.0, γ=1.0).
+
+Total instances: 119
+Mean Jaccard (SA vs Tabu): 0.976 ± 0.082
+Mean overlap: 9.47 / K=10 genes
+Identical selections: 108 / 119 (90.8%)
+Mean energy gap (SA - Tabu): 0.02977
+
+Per-cell-type Jaccard:
+            mean    std  count
+cell_type                     
+B          0.960  0.107     14
+CD4_T      1.000  0.000     15
+CD8_T      1.000  0.000     15
+DC         0.960  0.083     15
+Mono       0.935  0.145     15
+NK         0.987  0.052     15
+dnT        0.962  0.104     15
+gdT        1.000  0.000     15
