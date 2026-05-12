@@ -1,0 +1,82 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtualenv / conda
+.venv/
+venv/
+env/
+.env
+ENV/
+env.bak/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# R artefacts
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Large data files (kept out of the repo — see README for how to obtain)
+data/
+*.rds
+*.h5
+*.h5ad
+*.mtx
+*.mtx.gz
+seurat_*.rds
+so.*.rds
+
+# Output / intermediate (large)
+qubo_run/
+qubo_run_v5/
+qubo_run_v6/*.csv.gz
+qubo_run_v6/*/*.csv.gz
+qubo_run_v6/figures_genes/*.svg
+
+# Backup files
+*.bak
+*.tmp
+*.log
+
+# OS-specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Project-specific large outputs that should not be tracked
+github_release/data/
