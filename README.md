@@ -4,7 +4,7 @@
 
 It selects compact, cell-type-specific gene panels by jointly optimising disease relevance, cross-cohort consistency, within-panel redundancy and a fixed panel size, formulated as a Quadratic Unconstrained Binary Optimization (QUBO) problem and solved by classical simulated annealing. The method is classifier-independent: feature selection is decoupled from the downstream classifier.
 
-The framework was developed and benchmarked for multiple sclerosis (MS) versus control classification across four publicly available cerebrospinal fluid (CSF) cohorts (Pappalardo, Heming, Ramesh, Touil) under leave-one-cohort-out (LOCO) external validation.
+The framework was developed and benchmarked for multiple sclerosis (MS) versus control classification using four publicly available cerebrospinal fluid (CSF) scRNA-seq cohorts. Three cohorts with MS and control donors (Pappalardo, Heming, Ramesh) were used as leave-one-cohort-out (LOCO) held-out cohorts, while the Touil control-only cohort was retained in training.
 
 ## Installation
 
@@ -48,7 +48,7 @@ This runs the full quboFS selection on toy data (`examples/toy_data/`) and print
 The canonical result tables for all methods are shipped in `data_release/` (matched fixed panel size K = 10, run tag `primary_bio_edger_counts`, fixed seeds), so the main tables and figures can be checked without re-running the full pipeline:
 
 ```bash
-python scripts/make_canonical_figures.py     # regenerate Figures 1–4 + supplementary
+python scripts/make_canonical_figures.py     # regenerate Figures 2–4 and supplementary figures
 ```
 
 The end-to-end pipeline (from the integrated Seurat object to `qubo_run/` outputs) is in `scripts/01_pipeline` → `scripts/04_aggregation` and is driven by `scripts/reproduce.sh`; see `docs/reproduction.md` for the step-by-step guide and `docs/method_details.md` for the method specification.
@@ -66,7 +66,7 @@ All six methods were compared at a matched, fixed panel size of **K = 10 genes p
 | LASSO | 0.776 | 0.167 | 0.451 | 0.584 | **0.084** | 0.296 |
 | HVG | 0.689 | 0.264 | 0.487 | 0.619 | 0.233 | 0.465 |
 
-Boldface = best in each column. quboFS had significantly lower within-panel redundancy than every baseline (paired permutation, all *p* < 0.001); ROC-AUC differences among the disease-informed methods were not significant (quboFS highest numerically; vs Elastic Net *p* = 0.502). These values are reproduced exactly by `data_release/metrics_cross_cohort.csv`.
+quboFS had significantly lower within-panel redundancy than every baseline (paired permutation, all *p* < 0.001); ROC-AUC differences among the disease-informed methods were not significant (quboFS highest numerically; vs Elastic Net *p* = 0.502). These values are reproduced exactly by `data_release/metrics_cross_cohort.csv`.
 
 In the primary benchmark **K is fixed at 10 for all methods**; γ and λ are tuned by inner five-fold cross-validation, and K is varied only in the sensitivity analysis. In that sweep quboFS is reported for **K ≤ 15** because the QUBO step follows a top-20 sure-independence screen (larger K are shown for baselines only).
 
@@ -84,7 +84,7 @@ H(x) = - α Σ_i  r̃_i x_i                  (relevance reward)
 - **Redundancy** `ρ_ij`: Pearson correlation between genes i and j across training-donor pseudobulk; the absolute value treats positive and negative correlations as equally redundant.
 - **Cardinality** `K`: target panel size; the soft penalty drives the solution toward exactly K genes.
 
-`α = 1` is fixed; `γ`, `λ` and `K` are tuned by inner five-fold cross-validation within the training cohorts (held-out labels are never used). A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to the solver (`dwave-neal`, 30 reads × 600 sweeps; no quantum hardware). Per-cell-type panels are combined by soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
+`α = 1` and `K = 10` are fixed in the primary benchmark; `γ` and `λ` are selected by inner five-fold cross-validation within the training cohorts (held-out labels are never used). `K` is varied only in the panel-size sensitivity analysis. A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to the solver (`dwave-neal`, 30 reads × 600 sweeps; no quantum hardware). Per-cell-type panels are combined by unweighted soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
 
 ## Repository layout
 
