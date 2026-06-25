@@ -106,7 +106,7 @@ The four input CSF cohorts are publicly available from their original repositori
 
 ## Citation
 
-If you use quboFS, please cite the manuscript and software (see `CITATION.cff`). The software version and test data used in the manuscript are archived on Zenodo: https://doi.org/10.5281/zenodo.XXXXXXX (DOI assigned on release).
+If you use quboFS, please cite the manuscript and software (see `CITATION.cff`). The software version and test data used in the manuscript are archived on Zenodo: https://doi.org/10.5281/zenodo.20851199.
 
 ## Licence
 

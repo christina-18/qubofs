@@ -5,14 +5,15 @@ title: >-
 message: >-
   If you use this software, please cite using the metadata below.
 type: software
-version: 0.1.0
-# On Zenodo release, add:  doi: 10.5281/zenodo.XXXXXXX  and  date-released: YYYY-MM-DD
+version: 0.1.1
+doi: 10.5281/zenodo.20851199
+date-released: "2026-06-25"
 authors:
   - given-names: Mizuho
     family-names: Asada
     affiliation: >-
-      Meiji Pharmaceutical University; Institute of Science Tokyo;
-      Massachusetts General Hospital
+      Meiji Pharmaceutical University;
+      Massachusetts General Brigham; Harvard Medical School
     orcid: "https://orcid.org/0009-0003-5559-4635"
   - given-names: Takanori
     family-names: Hasegawa
@@ -22,14 +23,19 @@ authors:
     affiliation: >-
       Education and Research Center for Pharmacy,
       Meiji Pharmaceutical University
+  - given-names: Eun-Jae
+    family-names: Lee
+    affiliation: >-
+      Asan Medical Center, University of Ulsan College of Medicine;
+      Massachusetts General Brigham; Harvard Medical School
   - given-names: Michael
     family-names: Levy
     affiliation: >-
-      Massachusetts General Hospital; Harvard Medical School
+      Massachusetts General Brigham; Harvard Medical School
   - given-names: Takahisa
     family-names: Mikami
     affiliation: >-
-      Massachusetts General Hospital; Harvard Medical School
+      Massachusetts General Brigham; Harvard Medical School
 repository-code: "https://github.com/christina-18/qubofs"
 abstract: >-
   quboFS is a classifier-independent Quadratic Unconstrained
@@ -70,6 +76,8 @@ preferred-citation:
       family-names: Hasegawa
     - given-names: Daisuke
       family-names: Tominaga
+    - given-names: Eun-Jae
+      family-names: Lee
     - given-names: Michael
       family-names: Levy
     - given-names: Takahisa
