@@ -9,6 +9,20 @@ based on this configuration. Earlier DESeq2-primary entries below are retained a
 historical development records only and are superseded by version 2.0.0. The
 canonical configuration and current results are pinned in `PROVENANCE.md`.
 
+## [0.1.1] — 2026-06-25
+
+### Added
+- Public reviewer-facing release of quboFS for the Bioinformatics manuscript submission.
+- Added Zenodo DOI (10.5281/zenodo.20851199) and release metadata.
+- Included frozen summary tables, manuscript figures, lightweight reproduction scripts, examples, and tests.
+
+### Changed
+- Synchronized package version across `pyproject.toml`, `CITATION.cff`, and `src/qubofs/__init__.py`.
+- Updated repository metadata, README, and citation information for the public `qubofs` release.
+
+### Notes
+- Earlier entries in this changelog document internal analysis and method-development iterations (e.g. version 2.0.0, the edgeR-primary configuration). The `0.1.1` entry corresponds to the public software / Zenodo release of the package.
+
 ## [2.0.0] — 2026-06-07 — edgeR adopted as the primary DE relevance source
 
 After consultation among the co-authors, the primary differential-expression
