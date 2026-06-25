@@ -1,0 +1,92 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qubofs"
+version = "0.1.0"
+description = "Cohort-consistency-aware QUBO feature selection for compact single-cell RNA-seq biomarker panels."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Mizuho Asada", email = "mizuho@my-pharm.ac.jp" },
+]
+maintainers = [
+    { name = "Mizuho Asada", email = "mizuho@my-pharm.ac.jp" },
+]
+keywords = [
+    "QUBO",
+    "feature-selection",
+    "single-cell",
+    "scRNA-seq",
+    "biomarker",
+    "multiple-sclerosis",
+    "redundancy",
+    "simulated-annealing",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "scikit-learn>=1.3",
+    "dwave-neal>=0.6",
+    "dwave-samplers>=1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7",
+    "pytest-cov>=4",
+]
+docs = [
+    "sphinx>=6",
+    "sphinx-rtd-theme>=1.2",
+    "myst-parser>=2",
+]
+dev = [
+    "qubofs[test,docs]",
+    "ruff>=0.1",
+    "mypy>=1.0",
+    "python-docx>=0.8.11",
+]
+
+[project.scripts]
+qubofs = "qubofs.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/christina-18/qubofs"
+Repository = "https://github.com/christina-18/qubofs"
+Issues = "https://github.com/christina-18/qubofs/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+qubofs = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B"]
+ignore = ["E501"]

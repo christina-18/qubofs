@@ -1,0 +1,78 @@
+cff-version: 1.2.0
+title: >-
+  quboFS: low-redundancy QUBO feature selection
+  for candidate biomarker panels from single-cell RNA-seq
+message: >-
+  If you use this software, please cite using the metadata below.
+type: software
+version: 0.1.0
+# On Zenodo release, add:  doi: 10.5281/zenodo.XXXXXXX  and  date-released: YYYY-MM-DD
+authors:
+  - given-names: Mizuho
+    family-names: Asada
+    affiliation: >-
+      Meiji Pharmaceutical University; Institute of Science Tokyo;
+      Massachusetts General Hospital
+    orcid: "https://orcid.org/0009-0003-5559-4635"
+  - given-names: Takanori
+    family-names: Hasegawa
+    affiliation: Institute of Science Tokyo
+  - given-names: Daisuke
+    family-names: Tominaga
+    affiliation: >-
+      Education and Research Center for Pharmacy,
+      Meiji Pharmaceutical University
+  - given-names: Michael
+    family-names: Levy
+    affiliation: >-
+      Massachusetts General Hospital; Harvard Medical School
+  - given-names: Takahisa
+    family-names: Mikami
+    affiliation: >-
+      Massachusetts General Hospital; Harvard Medical School
+repository-code: "https://github.com/christina-18/qubofs"
+abstract: >-
+  quboFS is a classifier-independent Quadratic Unconstrained
+  Binary Optimization (QUBO) feature-selection framework that
+  jointly optimises gene-level relevance, pairwise non-redundancy
+  and fixed panel size to build compact, low-redundancy candidate
+  biomarker panels from single-cell RNA sequencing (scRNA-seq)
+  pseudobulk data. The framework combines cell-type-specific
+  donor-level pseudobulk construction, a pre-specified
+  technical/clonotype gene filter, training-only
+  cohort-consistency-weighted relevance scoring, and QUBO-based
+  subset optimisation. On a four-cohort cerebrospinal-fluid
+  scRNA-seq dataset for multiple sclerosis, quboFS produced the
+  least-redundant panels among evaluated methods while retaining
+  competitive held-out discrimination.
+keywords:
+  - multiple sclerosis
+  - single-cell RNA sequencing
+  - QUBO
+  - gene panel selection
+  - feature selection
+  - within-panel redundancy
+  - cohort-consistency weighting
+  - cross-cohort validation
+  - leave-one-cohort-out
+license: MIT
+preferred-citation:
+  type: article
+  title: >-
+    quboFS: low-redundancy QUBO feature selection
+    for candidate biomarker panels from single-cell RNA-seq
+  authors:
+    - given-names: Mizuho
+      family-names: Asada
+      affiliation: Meiji Pharmaceutical University
+      orcid: "https://orcid.org/0009-0003-5559-4635"
+    - given-names: Takanori
+      family-names: Hasegawa
+    - given-names: Daisuke
+      family-names: Tominaga
+    - given-names: Michael
+      family-names: Levy
+    - given-names: Takahisa
+      family-names: Mikami
+  journal: Bioinformatics
+  year: 2026

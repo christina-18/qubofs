@@ -1,0 +1,18 @@
+# Development and documentation dependencies for qubofs.
+# Install with: pip install -r requirements-dev.txt
+
+-r requirements.txt
+
+# Testing
+pytest>=7
+pytest-cov>=4
+
+# Linting and typing
+ruff>=0.1
+mypy>=1.0
+
+# Manuscript / documentation tooling
+python-docx>=0.8.11         # build_manuscript_docx.py (manuscript .md → .docx)
+sphinx>=6
+sphinx-rtd-theme>=1.2
+myst-parser>=2
