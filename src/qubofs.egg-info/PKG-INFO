@@ -1,0 +1,179 @@
+Metadata-Version: 2.4
+Name: qubofs
+Version: 0.1.0
+Summary: Cohort-consistency-aware QUBO feature selection for compact single-cell RNA-seq biomarker panels.
+Author-email: Mizuho Asada <mizuho@my-pharm.ac.jp>
+Maintainer-email: Mizuho Asada <mizuho@my-pharm.ac.jp>
+License: MIT License
+        
+        Copyright (c) 2026 Mizuho Asada and contributors
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/christina-18/qubofs
+Project-URL: Repository, https://github.com/christina-18/qubofs
+Project-URL: Issues, https://github.com/christina-18/qubofs/issues
+Keywords: QUBO,feature-selection,single-cell,scRNA-seq,biomarker,multiple-sclerosis,redundancy,simulated-annealing
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24
+Requires-Dist: pandas>=2.0
+Requires-Dist: scipy>=1.10
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: dwave-neal>=0.6
+Requires-Dist: dwave-samplers>=1.0
+Provides-Extra: test
+Requires-Dist: pytest>=7; extra == "test"
+Requires-Dist: pytest-cov>=4; extra == "test"
+Provides-Extra: docs
+Requires-Dist: sphinx>=6; extra == "docs"
+Requires-Dist: sphinx-rtd-theme>=1.2; extra == "docs"
+Requires-Dist: myst-parser>=2; extra == "docs"
+Provides-Extra: dev
+Requires-Dist: qubofs[docs,test]; extra == "dev"
+Requires-Dist: ruff>=0.1; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+Requires-Dist: python-docx>=0.8.11; extra == "dev"
+Dynamic: license-file
+
+# quboFS
+
+**quboFS** is a Python package for low-redundancy, QUBO-based feature selection from donor-level single-cell RNA-seq (scRNA-seq) pseudobulk data.
+
+It selects compact, cell-type-specific gene panels by jointly optimising disease relevance, cross-cohort consistency, within-panel redundancy and a fixed panel size, formulated as a Quadratic Unconstrained Binary Optimization (QUBO) problem and solved by classical simulated annealing. The method is classifier-independent: feature selection is decoupled from the downstream classifier.
+
+The framework was developed and benchmarked for multiple sclerosis (MS) versus control classification across four publicly available cerebrospinal fluid (CSF) cohorts (Pappalardo, Heming, Ramesh, Touil) under leave-one-cohort-out (LOCO) external validation.
+
+## Installation
+
+```bash
+git clone https://github.com/christina-18/qubofs.git
+cd qubofs
+pip install -e .
+```
+
+Requires Python ≥ 3.10. The core package dependencies (numpy, pandas, scipy,
+scikit-learn, dwave-neal, dwave-samplers) are declared in `pyproject.toml` and
+installed automatically by `pip install -e .`.
+
+To reproduce the manuscript figures and the full analysis environment (which
+additionally needs matplotlib and tqdm), install the pinned reproduction
+requirements:
+
+```bash
+pip install -r requirements.txt
+```
+
+For development (tests, linting, type-checking, docs and the manuscript build),
+install the optional dev extras:
+
+```bash
+pip install -e ".[dev]"
+```
+
+## Quick start
+
+A minimal, Seurat-free demonstration on small synthetic pseudobulk matrices:
+
+```bash
+python examples/quickstart.py
+```
+
+This runs the full quboFS selection on toy data (`examples/toy_data/`) and prints the selected per-cell-type panels — no real patient data or R required.
+
+## Reproducing the manuscript figures and tables
+
+The canonical result tables for all methods are shipped in `data_release/` (matched fixed panel size K = 10, run tag `primary_bio_edger_counts`, fixed seeds), so the main tables and figures can be checked without re-running the full pipeline:
+
+```bash
+python scripts/make_canonical_figures.py     # regenerate Figures 1–4 + supplementary
+```
+
+The end-to-end pipeline (from the integrated Seurat object to `qubo_run/` outputs) is in `scripts/01_pipeline` → `scripts/04_aggregation` and is driven by `scripts/reproduce.sh`; see `docs/reproduction.md` for the step-by-step guide and `docs/method_details.md` for the method specification.
+
+## Benchmark results (matched K = 10)
+
+All six methods were compared at a matched, fixed panel size of **K = 10 genes per cell type** under leave-one-cohort-out validation (means over the three held-out cohorts, each a mean over five inner-CV folds, fixed 0.5 threshold). quboFS is a low-redundancy **panel-design** method: it produced the **lowest within-panel redundancy of any method** while retaining competitive ROC-AUC (numerically highest, but not significantly different among the disease-informed methods). The contribution is the redundancy reduction at competitive accuracy — quboFS is a panel-design method, not an accuracy maximiser.
+
+| Method | ROC-AUC | MCC | Macro-F1 | Balanced Accuracy | σ_AUC | Mean within-panel \|ρ\| |
+|---|---:|---:|---:|---:|---:|---:|
+| quboFS | **0.815** | 0.255 | 0.488 | 0.623 | 0.128 | **0.247** |
+| Elastic Net | 0.792 | 0.278 | **0.535** | **0.651** | 0.120 | 0.447 |
+| mRMR | 0.813 | **0.283** | 0.513 | 0.636 | 0.094 | 0.279 |
+| DE-top | 0.807 | 0.261 | 0.505 | 0.629 | 0.114 | 0.375 |
+| LASSO | 0.776 | 0.167 | 0.451 | 0.584 | **0.084** | 0.296 |
+| HVG | 0.689 | 0.264 | 0.487 | 0.619 | 0.233 | 0.465 |
+
+Boldface = best in each column. quboFS had significantly lower within-panel redundancy than every baseline (paired permutation, all *p* < 0.001); ROC-AUC differences among the disease-informed methods were not significant (quboFS highest numerically; vs Elastic Net *p* = 0.502). These values are reproduced exactly by `data_release/metrics_cross_cohort.csv`.
+
+In the primary benchmark **K is fixed at 10 for all methods**; γ and λ are tuned by inner five-fold cross-validation, and K is varied only in the sensitivity analysis. In that sweep quboFS is reported for **K ≤ 15** because the QUBO step follows a top-20 sure-independence screen (larger K are shown for baselines only).
+
+## Method summary
+
+For each cell type and training split, quboFS selects a binary vector **x** ∈ {0,1}^N over the N candidate genes (x_i = 1 means gene i is selected) by minimising:
+
+```
+H(x) = - α Σ_i  r̃_i x_i                  (relevance reward)
+       + γ Σ_{i<j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
+       + λ ( (Σ_i x_i) - K )^2            (soft cardinality constraint)
+```
+
+- **Relevance** `r̃_i`: cohort-consistency-weighted relevance score `|z_i|·C_i`, min-max rescaled to [0, 1]. `z_i` is the edgeR MS-versus-control test statistic; `C_i` is the cross-cohort consistency.
+- **Redundancy** `ρ_ij`: Pearson correlation between genes i and j across training-donor pseudobulk; the absolute value treats positive and negative correlations as equally redundant.
+- **Cardinality** `K`: target panel size; the soft penalty drives the solution toward exactly K genes.
+
+`α = 1` is fixed; `γ`, `λ` and `K` are tuned by inner five-fold cross-validation within the training cohorts (held-out labels are never used). A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to the solver (`dwave-neal`, 30 reads × 600 sweeps; no quantum hardware). Per-cell-type panels are combined by soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
+
+## Repository layout
+
+```
+qubofs/
+├── src/qubofs/        # installable package (filter, relevance, qubo, pipeline, metrics, cli)
+├── examples/          # quickstart.py + synthetic toy_data/
+├── scripts/           # full analysis pipeline (01_pipeline → 04_aggregation) + figures
+├── data_release/      # canonical result tables (matched K = 10); see data_release/README.md
+├── figures/           # manuscript figures (PDF/PNG) + supplementary/
+├── docs/              # reproduction.md, data_sources.md, method_details.md, PROVENANCE.md
+├── tests/             # unit tests (pytest)
+├── pyproject.toml, requirements.txt, CITATION.cff, LICENSE, CHANGELOG.md
+```
+
+## Data availability
+
+The four input CSF cohorts are publicly available from their original repositories and are **not redistributed here**. Download them from the accessions listed in `docs/data_sources.md`. This repository ships synthetic toy data (`examples/toy_data/`) and the processed summary tables (`data_release/`) needed to reproduce the published results.
+
+## Citation
+
+If you use quboFS, please cite the manuscript and software (see `CITATION.cff`). The software version and test data used in the manuscript are archived on Zenodo: https://doi.org/10.5281/zenodo.XXXXXXX (DOI assigned on release).
+
+## Licence
+
+MIT — see `LICENSE`.
