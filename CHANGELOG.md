@@ -9,6 +9,13 @@ based on this configuration. Earlier DESeq2-primary entries below are retained a
 historical development records only and are superseded by version 2.0.0. The
 canonical configuration and current results are pinned in `PROVENANCE.md`.
 
+## [0.1.2] — 2026-06-25
+
+### Changed
+- Synchronized the package version to 0.1.2 across `pyproject.toml`, `CITATION.cff`, and `src/qubofs/__init__.py`.
+- Updated release metadata to the new Zenodo DOI (10.5281/zenodo.20853495).
+- Added Eun-Jae Lee to the author metadata and updated affiliations (Massachusetts General Brigham) in `CITATION.cff`, consistent with the manuscript.
+
 ## [0.1.1] — 2026-06-25
 
 ### Added
