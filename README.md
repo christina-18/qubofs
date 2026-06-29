@@ -2,9 +2,28 @@
 
 **quboFS** is a Python package for low-redundancy, QUBO-based feature selection from donor-level single-cell RNA-seq (scRNA-seq) pseudobulk data.
 
-It selects compact, cell-type-specific gene panels by jointly optimising disease relevance, cross-cohort consistency, within-panel redundancy and a fixed panel size, formulated as a Quadratic Unconstrained Binary Optimization (QUBO) problem and solved by classical simulated annealing. The method is classifier-independent: feature selection is decoupled from the downstream classifier.
+It selects compact, cell-type-specific gene panels by jointly optimising case-control relevance, cross-cohort consistency, within-panel redundancy and a fixed panel size, formulated as a Quadratic Unconstrained Binary Optimization (QUBO) problem and solved by classical simulated annealing. The method is classifier-independent: feature selection is decoupled from the downstream classifier.
 
 The framework was developed and benchmarked for multiple sclerosis (MS) versus control classification using four publicly available cerebrospinal fluid (CSF) scRNA-seq cohorts. Three cohorts with MS and control donors (Pappalardo, Heming, Ramesh) were used as leave-one-cohort-out (LOCO) held-out cohorts, while the Touil control-only cohort was retained in training.
+
+## Pipeline at a glance
+
+```mermaid
+flowchart TD
+    A["4 public CSF scRNA-seq cohorts<br/>50 donors, 221,066 cells"] --> B["Cell-type annotation<br/>8 immune cell types"]
+    B --> C["Per-donor pseudobulk<br/>per cell type (donor = unit)"]
+    C --> D["Two-stage gene filter<br/>technical/clonotype + detection/specificity"]
+    D --> E["Relevance s_i = |z_i| · C_i<br/>edgeR statistic × cohort consistency"]
+    D --> F["Redundancy |ρ_ij|<br/>absolute Pearson correlation"]
+    E --> G["QUBO objective<br/>relevance reward, redundancy penalty, cardinality (K)"]
+    F --> G
+    G --> H["Simulated annealing<br/>30 reads × 600 sweeps · no quantum hardware"]
+    H --> I["Compact K = 10 panel<br/>per cell type"]
+    I --> J["Per-cell-type L2 logistic<br/>+ unweighted soft voting"]
+    J --> K["Donor-level MS vs control<br/>LOCO external validation"]
+```
+
+Feature selection (steps D–I) is classifier-independent; the classifier (steps J–K) is held fixed across all methods so that differences reflect the feature selector, not the model.
 
 ## Installation
 
