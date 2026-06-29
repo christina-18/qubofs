@@ -10,20 +10,19 @@ The framework was developed and benchmarked for multiple sclerosis (MS) versus c
 
 ```mermaid
 flowchart TD
-    A["4 public CSF scRNA-seq cohorts<br/>50 donors, 221,066 cells"] --> B["Cell-type annotation<br/>8 immune cell types"]
-    B --> C["Per-donor pseudobulk<br/>per cell type (donor = unit)"]
-    C --> D["Two-stage gene filter<br/>technical/clonotype + detection/specificity"]
-    D --> E["Relevance s_i = |z_i| · C_i<br/>edgeR statistic × cohort consistency"]
-    D --> F["Redundancy |ρ_ij|<br/>absolute Pearson correlation"]
-    E --> G["QUBO objective<br/>relevance reward, redundancy penalty, cardinality (K)"]
+    A["4 CSF scRNA-seq cohorts<br/>50 donors"] --> B["Cell-type annotation<br/>8 immune cell types"]
+    B --> C["Per-donor pseudobulk<br/>per cell type"]
+    C --> D["Cell-type-aware gene filter"]
+    D --> E["Relevance |z_i|·C_i"]
+    D --> F["Redundancy |ρ_ij|"]
+    E --> G["QUBO selection"]
     F --> G
-    G --> H["Simulated annealing<br/>30 reads × 600 sweeps · no quantum hardware"]
-    H --> I["Compact K = 10 panel<br/>per cell type"]
-    I --> J["Per-cell-type L2 logistic<br/>+ unweighted soft voting"]
-    J --> K["Donor-level MS vs control<br/>LOCO external validation"]
+    G --> H["Compact K = 10 panel<br/>per cell type"]
+    H --> I["Per-cell-type classifier<br/>+ soft voting"]
+    I --> J["MS vs control prediction<br/>(LOCO validation)"]
 ```
 
-Feature selection (steps D–I) is classifier-independent; the classifier (steps J–K) is held fixed across all methods so that differences reflect the feature selector, not the model.
+Feature selection (relevance, redundancy and a fixed panel size) is classifier-independent and is solved by classical simulated annealing; no quantum hardware was used. The classifier is held fixed across all methods, so performance differences reflect the feature selector rather than the model.
 
 ## Installation
 
