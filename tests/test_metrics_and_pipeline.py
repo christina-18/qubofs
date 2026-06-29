@@ -86,6 +86,16 @@ def test_within_panel_redundancy_independent_columns():
     assert r < 0.2
 
 
+def test_within_panel_redundancy_constant_gene_emits_no_warning():
+    """A constant (zero-variance) gene must not leak a numpy RuntimeWarning."""
+    import warnings
+    X = np.column_stack([np.arange(10.0), np.full(10, 3.0), np.arange(10.0) * 2])
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")  # any RuntimeWarning becomes an error
+        r = within_panel_redundancy(X)
+    assert r == pytest.approx(1.0, abs=1e-9)  # the two non-constant cols are |corr|=1
+
+
 def _toy_data(seed: int = 0):
     rng = np.random.default_rng(seed)
     cell_types = ["B", "Mono"]
@@ -142,6 +152,26 @@ def test_pipeline_smoke():
     # Canonical markers should appear in their target cell types
     assert "XBP1" in pipe.selected_panels_["B"] or "MZB1" in pipe.selected_panels_["B"]
     assert "CD14" in pipe.selected_panels_["Mono"] or "LYZ" in pipe.selected_panels_["Mono"]
+
+
+def test_pipeline_rejects_n_prefilter_below_K():
+    """n_prefilter < K would silently drop every cell type; it must raise instead."""
+    pb, meta, rel = _toy_data()
+    with pytest.raises(ValueError):
+        Pipeline(K=10, n_prefilter=5).fit(pb, meta, rel)
+
+
+def test_pipeline_records_skipped_cell_types():
+    """A cell type with no relevance scores is recorded in skipped_, not silently lost."""
+    pb, meta, rel = _toy_data()
+    rel_b_only = {"B": rel["B"]}
+    pipe = Pipeline(
+        K=4, det_thr=0.5, spec_thr=0.5, n_prefilter=10,
+        sa_reads=4, sa_sweeps=150, seed=0,
+    ).fit(pb, meta, rel_b_only)
+    assert "Mono" in pipe.skipped_
+    assert "B" in pipe.selected_panels_
+    assert "Mono" not in pipe.selected_panels_
 
 
 # ---------------------------------------------------------------------------

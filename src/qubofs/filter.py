@@ -72,6 +72,54 @@ def is_vdj_segment(gene: str) -> bool:
     return False
 
 
+# Pre-selection technical-gene pattern (manuscript primary configuration):
+# mitochondrial, ribosomal-protein (incl. RPLP0/1/2 stalk and RPSA), cytosolic
+# heat-shock, classical housekeeping, dominant nuclear lncRNA / X-inactivation,
+# uncharacterised clone-named loci and small/non-coding RNAs. These dominate
+# technical rather than disease-specific variation and would otherwise occupy the
+# limited panel slots. Aligned with current best practice (Heumos et al. 2023;
+# Luecken & Theis 2019). Mirrors HK_PATTERN in scripts/03_selection/qubo_pipeline.py.
+_TECHNICAL_GENE = re.compile(
+    r"^(MT-|MTRNR|MTATP|MTND|"
+    r"RPL[0-9]|RPLP|RPS[0-9]|RPSA|MRPL|MRPS|"
+    r"HSP[A0-9]|HSPB|HSPA|HSPD|"
+    r"FAU|EEF1|ACTB$|ACTG1$|GAPDH$|B2M$|"
+    r"MALAT1$|NEAT1$|XIST$|TSIX$|"
+    r"AC[0-9]+|AL[0-9]+|AP[0-9]+|LINC|"
+    r"MIR[0-9]|RNU[0-9]|SNORA|SNORD)"
+)
+
+#: ER-chaperone / secretory-pathway genes retained despite matching the
+#: heat-shock pattern (HSPA5 = BiP/GRP78; HSP90B1 = GRP94/endoplasmin).
+TECHNICAL_RETAIN: frozenset[str] = frozenset({"HSPA5", "HSP90B1"})
+
+
+def is_technical_gene(gene: str) -> bool:
+    """Return ``True`` if ``gene`` is a technical / housekeeping gene that should
+    be removed before feature selection (mitochondrial, ribosomal-protein,
+    cytosolic heat-shock, classical housekeeping, dominant nuclear lncRNA,
+    uncharacterised clone-named loci, or small/non-coding RNA).
+
+    ER-chaperone / secretory genes in :data:`TECHNICAL_RETAIN` (HSPA5, HSP90B1)
+    are *not* matched. Immunoglobulin / TCR constant regions are not matched here
+    (clonotype V(D)J segments are handled separately by :func:`is_vdj_segment`).
+
+    Examples
+    --------
+    >>> is_technical_gene("MT-CO1")
+    True
+    >>> is_technical_gene("RPL13")
+    True
+    >>> is_technical_gene("HSPA5")   # ER chaperone, retained
+    False
+    >>> is_technical_gene("MS4A1")   # CD20, a real marker
+    False
+    """
+    if gene in TECHNICAL_RETAIN:
+        return False
+    return bool(_TECHNICAL_GENE.match(gene))
+
+
 @dataclass
 class CellTypeFilter:
     """Three-stage cell-type-aware candidate-gene filter.
@@ -88,6 +136,13 @@ class CellTypeFilter:
     exclude_vdj : bool, default True
         Stage 3: exclude immunoglobulin / TCR V(D)J variable and joining
         segments. Constant regions are retained.
+    exclude_technical : bool, default False
+        Stage 0 (pre-selection technical filter): drop mitochondrial, ribosomal-
+        protein, cytosolic heat-shock, classical housekeeping, dominant nuclear
+        lncRNA, uncharacterised clone-named and small/non-coding-RNA genes (see
+        :func:`is_technical_gene`). Off by default to preserve prior behaviour;
+        the manuscript pipeline applies this filter, and it is recommended when
+        running on raw pseudobulk so technical genes do not crowd the panel.
 
     Attributes
     ----------
@@ -109,6 +164,7 @@ class CellTypeFilter:
     det_thr: float = 0.7
     spec_thr: float = 0.7
     exclude_vdj: bool = True
+    exclude_technical: bool = False
 
     per_cell_type_stats_: dict[str, pd.DataFrame] = field(default_factory=dict, init=False, repr=False)
     expression_matrix_: pd.DataFrame | None = field(default=None, init=False, repr=False)
@@ -144,7 +200,9 @@ class CellTypeFilter:
         return self
 
     def passes(self, gene: str, target_cell_type: str) -> bool:
-        """Return ``True`` if ``gene`` passes Stages 1, 2 and 3 for ``target_cell_type``."""
+        """Return ``True`` if ``gene`` passes Stages 0-3 for ``target_cell_type``."""
+        if self.exclude_technical and is_technical_gene(gene):
+            return False
         if self.exclude_vdj and is_vdj_segment(gene):
             return False
         if not self.per_cell_type_stats_:
@@ -162,8 +220,14 @@ class CellTypeFilter:
         target_mean = float(row[target_cell_type])
         if target_mean <= 0:
             return False
-        other_max = float(row.drop(target_cell_type).max())
-        if other_max <= 0:
+        other = row.drop(target_cell_type)
+        # When the target is the only cell type (or no other cell type expresses
+        # the gene), specificity cannot be assessed: the gene passes Stage 2.
+        # (Matches the float("inf") convention in scripts/03_selection.)
+        if other.empty:
+            return True
+        other_max = float(other.max())
+        if not np.isfinite(other_max) or other_max <= 0:
             return True
         return (target_mean / other_max) >= self.spec_thr
 

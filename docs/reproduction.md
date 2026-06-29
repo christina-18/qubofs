@@ -12,7 +12,7 @@ from the released intermediate outputs in `data_release/`.
 - ~20 GB disk for intermediate pseudobulk matrices
 
 ### Software
-- Python ≥ 3.10 with the packages in `requirements.txt` (includes `dwave-neal`)
+- Python ≥ 3.10 with the packages in `requirements.txt` (numpy, pandas, matplotlib; the QUBO solver is pure-NumPy, no solver library required)
 - R ≥ 4.2 with the packages in `docs/R_dependencies.md` (Seurat, edgeR, limma) — needed only for stages 1–2
 
 ```bash
@@ -112,11 +112,14 @@ python3 scripts/04_aggregation/solver_sensitivity.py       # SA vs exact optimum
 ## 5. Figures
 
 ```bash
-python3 scripts/make_canonical_figures.py                  # Figures 2–4 and Supplementary S1–S5
+python3 scripts/make_canonical_figures.py                  # Figures 2–4 and Supplementary S1–S4
 ```
 
-Figures are written to `figures/`. Figure 1 is a curated schematic and is not
-regenerated. The released result tables underlying all figures are in
+Figures are written to `figures_oup/`. Figure 1 is a curated schematic and is not
+regenerated. When the full per-run outputs (`qubo_run/`) are absent, the script
+falls back to the shipped `data_release/` tables for the figures it can build
+(2, 3, S1) and skips those needing per-fold outputs (4, S4) with a message
+rather than aborting. The released result tables underlying all figures are in
 `data_release/`.
 
 ## 6. Software quickstart (no Seurat object needed)

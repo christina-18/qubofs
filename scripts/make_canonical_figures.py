@@ -47,12 +47,32 @@ COL = {"QUBO": "#D55E00", "mRMR": "#0072B2", "DE_top": "#009E73",
 COHORTS = ["Pappalardo", "Heming", "Ramesh"]
 
 
+# When the per-run qubo_run/ outputs are absent (e.g. the reviewer-facing
+# reproduce_from_release.sh path), fall back to the shipped data_release/ tables,
+# which carry the same columns under canonical names.
+RELEASE = PROJ / "data_release"
+_RELEASE_MAP = {
+    "primary_summary_per_holdout": "metrics_per_cohort.csv",
+    "table1": "pbmc_pooled_table1.csv",
+    "within_panel_redundancy_perpanel": "within_panel_redundancy_perpanel.csv",
+}
+
+
 def _read_tagged(stem):
-    """Read an aggregation CSV, preferring the tag-suffixed file (per DE source)
-    over the legacy fixed-name file. This makes the figures pull the correct DE
-    source (QUBOFS_RUN_TAG) regardless of which run wrote the legacy file last."""
-    tagged = RUN / f"{stem}_{TAG}.csv"
-    return pd.read_csv(tagged if tagged.exists() else RUN / f"{stem}.csv")
+    """Read an aggregation CSV, preferring the tag-suffixed qubo_run/ file (per DE
+    source), then the legacy fixed-name file, then the shipped data_release/
+    equivalent. Raises FileNotFoundError if none exists, so callers in __main__
+    can skip a figure whose inputs were not shipped (e.g. per-fold outputs)."""
+    for cand in (RUN / f"{stem}_{TAG}.csv", RUN / f"{stem}.csv"):
+        if cand.exists():
+            return pd.read_csv(cand)
+    rel = _RELEASE_MAP.get(stem)
+    if rel and (RELEASE / rel).exists():
+        return pd.read_csv(RELEASE / rel)
+    raise FileNotFoundError(
+        f"no results CSV for '{stem}' in {RUN}/ or {RELEASE}/ "
+        "(run the full pipeline, or this figure needs per-fold outputs not in data_release/)"
+    )
 
 plt.rcParams.update({"font.size": 10, "font.family": "DejaVu Sans",
                      "savefig.dpi": 300, "savefig.bbox": "tight",
@@ -103,7 +123,7 @@ def figure3():
        Δ within-panel |rho| = baseline − quboFS (mean ± 95% CI over the 119
        cohort×fold×cell-type panels); positive = more redundant than quboFS;
     B. within-panel |rho| distribution across the 119 panels (ascending median)."""
-    t = pd.read_csv(RUN / f"table1_{TAG}.csv").set_index("method")
+    t = _read_tagged("table1").set_index("method")
     pp = _read_tagged("within_panel_redundancy_perpanel")
 
     # ---- A: paired per-panel difference (baseline − quboFS) ----
@@ -572,13 +592,29 @@ if __name__ == "__main__":
     # Figure 1 is the curated graphic in figures_oup/figure1_pipeline.png and must
     # NOT be overwritten by the plain matplotlib version. The figure1() function is
     # kept only as a fallback/reference.
-    figure2()
-    figure3()
-    figure4()
-    figureS1()           # Figure S1: dataset composition
-    figureS2_ksweep()    # Figure S2: panel-size (K) sensitivity
-    figureS3_solver()    # Figure S3: solver sensitivity
-    figureS4_recovery()  # Figure S4: literature concordance / Ramesh B-cell signature
+    # Each figure is independent: a missing input (e.g. per-fold outputs not
+    # shipped in data_release/) skips that figure with a message instead of
+    # aborting the whole run, so the reviewer-facing reproduce_from_release.sh
+    # path still produces every figure whose data is available.
+    _figures = [
+        (figure2, "Figure 2: cohort robustness"),
+        (figure3, "Figure 3: performance vs redundancy"),
+        (figure4, "Figure 4: biology / selection frequency"),
+        (figureS1, "Figure S1: dataset composition"),
+        (figureS2_ksweep, "Figure S2: panel-size (K) sensitivity"),
+        (figureS3_solver, "Figure S3: solver sensitivity"),
+        (figureS4_recovery, "Figure S4: literature concordance"),
+    ]
+    _n_ok = 0
+    for _fn, _desc in _figures:
+        try:
+            _fn()
+            _n_ok += 1
+        except (FileNotFoundError, KeyError, ValueError, pd.errors.EmptyDataError) as _e:
+            # Missing/empty inputs (e.g. per-fold outputs not shipped in
+            # data_release/) skip this figure rather than aborting the run.
+            print(f"[skip] {_desc}: {type(_e).__name__}: {_e}")
+    print(f"Generated {_n_ok}/{len(_figures)} figures into {OUT}")
     # figureS6_dotplot() and figureS7_audit() are retained as optional development
     # utilities but are NOT part of the submitted manuscript supplement: the B-cell
     # dot plot and the audit-category figure were removed to keep it focused (the

@@ -9,6 +9,59 @@ based on this configuration. Earlier DESeq2-primary entries below are retained a
 historical development records only and are superseded by version 2.0.0. The
 canonical configuration and current results are pinned in `PROVENANCE.md`.
 
+## [Unreleased]
+
+### Fixed
+- **Public QUBO API silently corrupted results for a natural correlation matrix.**
+  `simulated_annealing` / `QUBOSelector.fit_select` assume a zero-diagonal
+  redundancy matrix, but the docstring suggests passing absolute Pearson
+  correlations (diagonal 1.0). A nonzero diagonal drifted the energy by hundreds
+  and changed the selected panel, silently. The solver now defensively copies and
+  zeroes the diagonal (without mutating the caller's matrix). The internal
+  `Pipeline` was unaffected (it already zeroed the diagonal).
+- **`reproduce_from_release.sh` was non-functional.** `make_canonical_figures.py`
+  read a non-existent `qubo_run/` and crashed with `FileNotFoundError` before any
+  figure was written. It now falls back to the shipped `data_release/` tables for
+  the figures whose inputs are released (2, 3, S1) and skips those needing
+  per-fold outputs (4, S4) with a message instead of aborting; the script now
+  exits 0 and regenerates the released figures.
+- Suppressed an unhandled numpy `RuntimeWarning` from `within_panel_redundancy`
+  when a panel contains a constant (zero-variance) gene.
+- **Dependencies trimmed to what is actually imported.** The installable package
+  (and the entire repo) imports only `numpy` and `pandas`; `scipy`,
+  `scikit-learn`, `dwave-neal` and `dwave-samplers` were declared as core
+  install dependencies but never imported anywhere. Core deps are now
+  `numpy` + `pandas`; scikit-learn moved to the `test` extra, matplotlib to a new
+  `figures` extra, and dwave to an optional `solvers` extra. Corrected the
+  inaccurate comments in `requirements.txt` (the `.mtx` reader is scipy-free and
+  the solver is pure-NumPy, not `dwave-neal`).
+- **`CellTypeFilter` single-cell-type Stage-2 bug.** With only one cell type,
+  the specificity ratio divided by an empty-`max()` (NaN) and silently rejected
+  every gene; it now passes Stage 2 when specificity cannot be assessed
+  (matching the `float("inf")` convention in `scripts/03_selection`).
+- **Documentation/solver accuracy.** README and `docs/` described the solver as
+  `dwave-neal`; it is a classical simulated-annealing routine written in pure
+  NumPy. The documented redundancy term `Σ_{i<j}` is implemented as the
+  equivalent symmetric form `γ·xᵀRx` (sum over ordered pairs `i ≠ j`); the docs
+  now state this.
+
+### Added
+- **Optional Stage-0 technical-gene filter** (`is_technical_gene`,
+  `CellTypeFilter(exclude_technical=...)`, `Pipeline(exclude_technical=...)`,
+  `qubofs run --exclude-technical`), porting the manuscript's pre-selection
+  mito/ribosomal/housekeeping filter so raw pseudobulk does not yield
+  technical-gene panels. Off by default (non-breaking).
+- `Pipeline` now validates `n_prefilter >= K` (a smaller pre-filter silently
+  dropped every cell type) and records dropped cell types and the reason in a new
+  `skipped_` attribute.
+- New tests for the CLI (`run`/`info`), the single-cell-type filter fix, the
+  technical-gene filter, the zero-diagonal regression, the `n_prefilter`/`skipped_`
+  behaviour and the redundancy no-warning path (34 → **45** tests).
+
+### Removed
+- Untracked committed build cruft (`scripts/.DS_Store`, `scripts/**/*.pyc`); the
+  `.gitignore` already ignored these patterns but the files predated it.
+
 ## [0.1.2] — 2026-06-25
 
 ### Changed

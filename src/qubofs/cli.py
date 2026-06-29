@@ -61,6 +61,9 @@ def _build_parser() -> argparse.ArgumentParser:
                      help="Stage 2 cell-type-specificity threshold (default 0.7).")
     run.add_argument("--no-vdj-exclusion", action="store_true",
                      help="Disable Stage 3 V(D)J variable-segment exclusion.")
+    run.add_argument("--exclude-technical", action="store_true",
+                     help="Enable Stage 0 technical-gene filter (mito/ribosomal/"
+                          "housekeeping/non-coding); recommended on raw pseudobulk.")
     run.add_argument("--no-cohort-consistency", action="store_true",
                      help="Disable cohort-consistency weighting of relevance.")
     run.add_argument("--n-prefilter", type=int, default=20,
@@ -121,6 +124,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         K=args.K,
         det_thr=args.filter_det, spec_thr=args.filter_spec,
         exclude_vdj=not args.no_vdj_exclusion,
+        exclude_technical=args.exclude_technical,
         apply_cohort_consistency=not args.no_cohort_consistency,
         n_prefilter=args.n_prefilter,
         alpha=args.alpha, gamma=args.gamma, lambda_=args.lambda_,
@@ -151,6 +155,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
                 "det_thr": args.filter_det,
                 "spec_thr": args.filter_spec,
                 "exclude_vdj": not args.no_vdj_exclusion,
+                "exclude_technical": args.exclude_technical,
                 "apply_cohort_consistency": not args.no_cohort_consistency,
                 "n_prefilter": args.n_prefilter,
                 "alpha": args.alpha,
@@ -171,7 +176,14 @@ def _cmd_run(args: argparse.Namespace) -> int:
 def _cmd_info(_args: argparse.Namespace) -> int:
     import importlib.metadata as md
     print(f"qubofs version: {__version__}")
-    for pkg in ("numpy", "pandas", "scipy", "scikit-learn"):
+    print("core dependencies:")
+    for pkg in ("numpy", "pandas"):
+        try:
+            print(f"  {pkg}: {md.version(pkg)}")
+        except md.PackageNotFoundError:
+            print(f"  {pkg}: not installed")
+    print("optional (figures / tests):")
+    for pkg in ("matplotlib", "scikit-learn"):
         try:
             print(f"  {pkg}: {md.version(pkg)}")
         except md.PackageNotFoundError:

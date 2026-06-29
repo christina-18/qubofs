@@ -110,6 +110,34 @@ def test_simulated_annealing_rejects_bad_redundancy_shape():
         simulated_annealing(r, R, K=2)
 
 
+def test_redundancy_diagonal_is_zeroed_defensively():
+    """A natural |Pearson| redundancy matrix has 1.0 on the diagonal. The solver
+    must zero it internally so the energy/selection match the zero-diagonal case
+    and the caller's matrix is never mutated (regression for the silent-corruption
+    bug where a diag=1 input drifted the energy by hundreds and changed the panel)."""
+    rng = np.random.default_rng(1)
+    N = 20
+    r = rng.random(N)
+    X = rng.standard_normal((30, N))
+    R = np.abs(np.corrcoef(X.T))          # diagonal == 1.0
+    R_before = R.copy()
+    Rz = R.copy()
+    np.fill_diagonal(Rz, 0.0)
+
+    # rescale_relevance=False so energy_ is directly comparable to H(x) with r.
+    sel_diag1 = QUBOSelector(K=5, seed=42, rescale_relevance=False).fit_select(r, R)
+    sel_diag0 = QUBOSelector(K=5, seed=42, rescale_relevance=False).fit_select(r, Rz)
+    assert np.array_equal(sel_diag1.selected_indices_, sel_diag0.selected_indices_)
+    assert sel_diag1.energy_ == pytest.approx(sel_diag0.energy_)
+    # the caller's matrix must not be mutated in place
+    assert np.array_equal(R, R_before)
+
+    # the reported energy must equal the true H(x) of the returned mask
+    x = sel_diag1.selected_mask_.astype(float)
+    trueH = -r.dot(x) + 0.5 * x.dot(Rz @ x) + 2.0 * (x.sum() - 5) ** 2
+    assert sel_diag1.energy_ == pytest.approx(trueH, abs=1e-9)
+
+
 def test_simulated_annealing_seed_reproducibility():
     rng = np.random.default_rng(0)
     N = 10
