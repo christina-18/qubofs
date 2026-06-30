@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from qubofs.filter import CellTypeFilter, is_vdj_segment
+from qubofs.filter import CellTypeFilter, is_technical_gene, is_vdj_segment
 
 
 def test_is_vdj_segment_excludes_v_and_j():
@@ -112,3 +112,44 @@ def test_celltype_filter_unfit_raises():
     f = CellTypeFilter()
     with pytest.raises(RuntimeError):
         f.passes("XBP1", "B")
+
+
+def test_celltype_filter_single_cell_type_passes_stage2():
+    """Regression: with only one cell type, Stage 2 cannot assess specificity, so
+    a detected, expressed gene must still pass (it previously failed because
+    drop(target).max() on an empty Series is NaN, rejecting every gene)."""
+    rng = np.random.default_rng(0)
+    genes = ["XBP1", "MS4A1", "CD79A"]
+    donors = [f"d{i}" for i in range(8)]
+    pb = {"B": pd.DataFrame(rng.random((3, 8)) + 1.0, index=genes, columns=donors)}
+    f = CellTypeFilter(det_thr=0.5, spec_thr=0.7).fit(pb)
+    assert f.passes("XBP1", "B")
+    assert f.filter_genes(genes, "B") == genes
+
+
+# ---------------------------------------------------------------------------
+# Stage 0 — optional technical-gene filter
+# ---------------------------------------------------------------------------
+
+def test_is_technical_gene_matches_mito_ribo_housekeeping():
+    for g in ("MT-CO1", "MTRNR2", "RPL13", "RPS6", "RPLP0", "RPSA", "MRPL10",
+              "HSPA1A", "EEF1A1", "ACTB", "GAPDH", "B2M", "MALAT1", "NEAT1",
+              "AC004556.1", "LINC01128", "MIR155", "SNORD3A"):
+        assert is_technical_gene(g), g
+
+
+def test_is_technical_gene_retains_markers_and_er_chaperones():
+    for g in ("MS4A1", "CD79A", "MZB1", "XBP1", "BANK1", "EBF1", "HSPA5", "HSP90B1"):
+        assert not is_technical_gene(g), g
+
+
+def test_celltype_filter_exclude_technical_stage0():
+    pb = _toy_pseudobulk()
+    pb["B"].loc["MT-CO1", :] = 1.0     # high, B-specific, but technical
+    pb["Mono"].loc["MT-CO1", :] = 0.01
+    pb["T"].loc["MT-CO1", :] = 0.01
+    f_off = CellTypeFilter(det_thr=0.5, spec_thr=0.5, exclude_technical=False).fit(pb)
+    f_on = CellTypeFilter(det_thr=0.5, spec_thr=0.5, exclude_technical=True).fit(pb)
+    assert f_off.passes("MT-CO1", "B")        # default behaviour unchanged
+    assert not f_on.passes("MT-CO1", "B")     # Stage 0 drops it
+    assert f_on.passes("XBP1", "B")           # real marker still passes

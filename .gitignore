@@ -1,8 +1,19 @@
-
 # Python build/cache files
 __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# OS files
 .DS_Store
-.DS_Store
+
+# Generated figure output (committed figures live in figures/)
+figures_oup/
+
+# Virtual environments
+.venv/
+venv/

@@ -32,7 +32,7 @@ __version__ = "0.1.2"
 __author__ = "Mizuho Asada"
 __license__ = "MIT"
 
-from qubofs.filter import CellTypeFilter
+from qubofs.filter import CellTypeFilter, is_technical_gene, is_vdj_segment
 from qubofs.metrics import (
     balanced_accuracy,
     macro_f1,
@@ -47,6 +47,8 @@ from qubofs.relevance import CohortConsistency
 __all__ = [
     "__version__",
     "CellTypeFilter",
+    "is_technical_gene",
+    "is_vdj_segment",
     "CohortConsistency",
     "QUBOSelector",
     "Pipeline",

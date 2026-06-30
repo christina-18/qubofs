@@ -24,6 +24,8 @@ flowchart TD
 
 Feature selection (relevance, redundancy and a fixed panel size) is classifier-independent and is solved by classical simulated annealing; no quantum hardware was used. The classifier is held fixed across all methods, so performance differences reflect the feature selector rather than the model.
 
+> **Scope of the installable package.** The `qubofs` package (the `Pipeline` class) performs the **feature-selection** steps only (cell-type filtering → relevance/redundancy → QUBO panel). The per-cell-type classifier, soft voting and leave-one-cohort-out benchmark shown at the bottom of the diagram live in `scripts/`, not in `Pipeline`.
+
 ## Installation
 
 ```bash
@@ -32,9 +34,14 @@ cd qubofs
 pip install -e .
 ```
 
-Requires Python ≥ 3.10. The core package dependencies (numpy, pandas, scipy,
-scikit-learn, dwave-neal, dwave-samplers) are declared in `pyproject.toml` and
-installed automatically by `pip install -e .`.
+Requires Python ≥ 3.10. The installable package depends only on **numpy and
+pandas** — the QUBO is solved by a classical simulated-annealing routine written
+in pure NumPy (`qubofs.qubo`), so no QUBO-solver library is needed. These two
+dependencies are declared in `pyproject.toml` and installed automatically by
+`pip install -e .`. Optional extras are available for the figure scripts
+(`pip install "qubofs[figures]"`), the test suite (`qubofs[test]`, adds
+scikit-learn for metric cross-checks) and alternative QUBO back-ends
+(`qubofs[solvers]`, adds dwave-samplers).
 
 To reproduce the manuscript figures and the full analysis environment (which
 additionally needs matplotlib and tqdm), install the pinned reproduction
@@ -94,15 +101,20 @@ For each cell type and training split, quboFS selects a binary vector **x** ∈ 
 
 ```
 H(x) = - α Σ_i  r̃_i x_i                  (relevance reward)
-       + γ Σ_{i<j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
+       + γ Σ_{i≠j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
        + λ ( (Σ_i x_i) - K )^2            (soft cardinality constraint)
 ```
+
+(The redundancy term is the symmetric quadratic form `γ·xᵀRx` with `R = |ρ|`
+and zero diagonal, i.e. the sum over ordered pairs `i ≠ j`; this is twice the
+sum over unordered pairs `i < j`. The factor is absorbed into the
+cross-validated `γ`.)
 
 - **Relevance** `r̃_i`: cohort-consistency-weighted relevance score `|z_i|·C_i`, min-max rescaled to [0, 1]. `z_i` is the edgeR MS-versus-control test statistic; `C_i` is the cross-cohort consistency.
 - **Redundancy** `ρ_ij`: Pearson correlation between genes i and j across training-donor pseudobulk; the absolute value treats positive and negative correlations as equally redundant.
 - **Cardinality** `K`: target panel size; the soft penalty drives the solution toward exactly K genes.
 
-`α = 1` and `K = 10` are fixed in the primary benchmark; `γ` and `λ` are selected by inner five-fold cross-validation within the training cohorts (held-out labels are never used). `K` is varied only in the panel-size sensitivity analysis. A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to the solver (`dwave-neal`, 30 reads × 600 sweeps; no quantum hardware). Per-cell-type panels are combined by unweighted soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
+`α = 1` and `K = 10` are fixed in the primary benchmark; `γ` and `λ` are selected by inner five-fold cross-validation within the training cohorts (held-out labels are never used). `K` is varied only in the panel-size sensitivity analysis. A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to a classical simulated-annealing solver (pure-NumPy implementation, 30 reads × 600 sweeps; no quantum hardware). The QUBO matrix is solver-agnostic and is in principle compatible with `dwave-samplers` (simulated-annealing / Tabu) or quantum-annealing back-ends. Per-cell-type panels are combined by unweighted soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
 
 ## Repository layout
 

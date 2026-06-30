@@ -80,6 +80,15 @@ def simulated_annealing(
     N = relevance.size
     if K < 1 or K > N:
         raise ValueError("K must be between 1 and the number of candidate features")
+    # The incremental energy update (dE_redundancy = 2*gamma*Rx[i]*dx) and the
+    # energy accumulator are exact only when the redundancy matrix has a zero
+    # diagonal — a gene is not redundant with itself. A natural input such as an
+    # absolute Pearson correlation matrix has 1.0 on the diagonal, which would
+    # silently corrupt both the reported energy and the selection. Defensively
+    # copy and zero the diagonal so the public API always matches the documented
+    # precondition (and never mutates the caller's array).
+    redundancy = np.array(redundancy, dtype=np.float64, copy=True)
+    np.fill_diagonal(redundancy, 0.0)
     rng = np.random.default_rng(seed)
     Ts = t_max * (t_min / t_max) ** (np.arange(n_sweeps) / max(1, n_sweeps - 1))
 

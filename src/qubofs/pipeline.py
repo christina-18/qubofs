@@ -50,6 +50,10 @@ class Pipeline:
         Stage 2 cell-type-specificity threshold.
     exclude_vdj : bool, default True
         Stage 3: exclude immunoglobulin / TCR V(D)J variable & joining segments.
+    exclude_technical : bool, default False
+        Stage 0: drop mitochondrial / ribosomal / housekeeping / non-coding
+        technical genes before selection (recommended on raw pseudobulk; the
+        manuscript pipeline applies this). See :func:`qubofs.filter.is_technical_gene`.
     apply_cohort_consistency : bool, default True
         Weight per-gene relevance by cohort-consistency score before SA.
     n_prefilter : int, default 20
@@ -74,12 +78,17 @@ class Pipeline:
         Per-cell-type final QUBO energy.
     consistency_ : dict[str, pandas.Series]
         Per-cell-type cohort-consistency scores (if enabled).
+    skipped_ : dict[str, str]
+        Cell types that produced no panel, mapped to the reason (no relevance,
+        or fewer than ``K`` candidates after filtering). Lets callers distinguish
+        a silently-dropped cell type from an intentionally-absent one.
     """
 
     K: int = 10
     det_thr: float = 0.7
     spec_thr: float = 0.7
     exclude_vdj: bool = True
+    exclude_technical: bool = False
     apply_cohort_consistency: bool = True
     n_prefilter: int | None = 20
     alpha: float = 1.0
@@ -97,6 +106,7 @@ class Pipeline:
     selected_panels_: dict[str, list[str]] = field(default_factory=dict, init=False, repr=False)
     selector_energy_: dict[str, float] = field(default_factory=dict, init=False, repr=False)
     consistency_: dict[str, pd.Series] = field(default_factory=dict, init=False, repr=False)
+    skipped_: dict[str, str] = field(default_factory=dict, init=False, repr=False)
     _filter: CellTypeFilter | None = field(default=None, init=False, repr=False)
 
     def fit(
@@ -122,21 +132,31 @@ class Pipeline:
         -------
         self
         """
+        if self.n_prefilter is not None and self.n_prefilter < self.K:
+            raise ValueError(
+                f"n_prefilter ({self.n_prefilter}) must be >= K ({self.K}); a smaller "
+                "pre-filter leaves fewer than K candidates and drops every cell type."
+            )
+
         self._filter = CellTypeFilter(
-            det_thr=self.det_thr, spec_thr=self.spec_thr, exclude_vdj=self.exclude_vdj
+            det_thr=self.det_thr, spec_thr=self.spec_thr,
+            exclude_vdj=self.exclude_vdj, exclude_technical=self.exclude_technical,
         ).fit(pseudobulk_per_celltype)
 
         self.selected_panels_ = {}
         self.selector_energy_ = {}
         self.consistency_ = {}
+        self.skipped_ = {}
 
         for ct, pb in pseudobulk_per_celltype.items():
             rel = relevance_per_celltype.get(ct)
             if rel is None or rel.empty:
+                self.skipped_[ct] = "no relevance scores provided"
                 continue
             # Stage 1+2+3 filter on the gene index
             keep = [g for g in rel.index if self._filter.passes(g, ct)]
             if len(keep) < self.K:
+                self.skipped_[ct] = f"only {len(keep)} genes passed the filter (< K={self.K})"
                 continue
             rel_f = rel.loc[keep].copy().astype(float)
             # Cohort-consistency weighting
@@ -155,6 +175,7 @@ class Pipeline:
             # Pull pseudobulk for top-N candidates
             cands = [g for g in top_idx if g in pb.index]
             if len(cands) < self.K:
+                self.skipped_[ct] = f"only {len(cands)} candidates after pre-filter (< K={self.K})"
                 continue
             X = pb.loc[cands].T.values
             X_mean = X.mean(axis=0)

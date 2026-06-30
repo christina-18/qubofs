@@ -41,19 +41,25 @@ For each cell type and training split, select **x** ∈ {0,1}^N minimising
 
 ```
 H(x) = - α Σ_i  r̃_i x_i                  (relevance reward)
-       + γ Σ_{i<j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
+       + γ Σ_{i≠j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
        + λ ( (Σ_i x_i) - K )^2            (soft cardinality constraint)
 ```
 
 where `r̃_i` is `|z_i|·C_i` min-max rescaled to [0,1] over the candidate pool,
 and `ρ_ij` is the Pearson correlation between genes across training-donor
-pseudobulk (absolute value). For the primary matched benchmark, `α = 1` and
+pseudobulk (absolute value). The redundancy term is implemented as the symmetric
+quadratic form `γ·xᵀRx` (`R = |ρ|`, zero diagonal), i.e. the sum over ordered
+pairs `i ≠ j` — twice the sum over `i < j`; the constant factor is absorbed into
+the cross-validated `γ`. For the primary matched benchmark, `α = 1` and
 `K = 10` are fixed for all methods; `γ ∈ {0.5, 1.0}` and `λ ∈ {2, 5}` are
 selected by inner five-fold donor-stratified cross-validation within the training
 cohorts (held-out labels are never used). The panel size `K` is varied only in
 the panel-size sensitivity analysis. The cardinality term expands to standard
-QUBO matrix form `xᵀQx`; solved by classical simulated annealing (`dwave-neal`,
-30 reads × 600 sweeps). No quantum hardware is used.
+QUBO matrix form `xᵀQx`; solved by classical simulated annealing (a pure-NumPy
+implementation — `qubofs.qubo.simulated_annealing` in the package and
+`scripts/03_selection/qubo_utils.solve_qubo_sa` in the pipeline — 30 reads ×
+600 sweeps). The QUBO matrix is solver-agnostic (compatible with `dwave-samplers`
+SA/Tabu or quantum-annealing back-ends); no quantum hardware is used.
 
 ## 5. Classifier, ensemble and evaluation
 

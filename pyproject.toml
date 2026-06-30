@@ -38,27 +38,38 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Bio-Informatics",
     "Topic :: Scientific/Engineering :: Mathematics",
 ]
+# The installable package (src/qubofs) imports only numpy and pandas. The QUBO
+# is solved by a classical simulated-annealing implementation in qubofs.qubo
+# (pure NumPy); no QUBO-solver library is required. Extras below cover the
+# manuscript figure scripts and the test/lint/docs tooling.
 dependencies = [
     "numpy>=1.24",
     "pandas>=2.0",
-    "scipy>=1.10",
-    "scikit-learn>=1.3",
-    "dwave-neal>=0.6",
-    "dwave-samplers>=1.0",
 ]
 
 [project.optional-dependencies]
+# Regenerating the manuscript figures (scripts/make_canonical_figures.py).
+figures = [
+    "matplotlib>=3.7",
+]
 test = [
     "pytest>=7",
     "pytest-cov>=4",
+    "scikit-learn>=1.3",   # cross-checks qubofs metrics against sklearn (importorskip)
 ]
 docs = [
     "sphinx>=6",
     "sphinx-rtd-theme>=1.2",
     "myst-parser>=2",
 ]
+# Optional alternative QUBO back-ends. The packaged solver is NumPy-only; install
+# this only to experiment with dwave simulated-annealing / Tabu / quantum samplers
+# against the solver-agnostic QUBO matrix (not required to reproduce the paper).
+solvers = [
+    "dwave-samplers>=1.0",
+]
 dev = [
-    "qubofs[test,docs]",
+    "qubofs[test,docs,figures]",
     "ruff>=0.1",
     "mypy>=1.0",
     "python-docx>=0.8.11",

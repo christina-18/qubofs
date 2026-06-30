@@ -107,7 +107,10 @@ def within_panel_redundancy(expression: np.ndarray) -> float:
     X = np.asarray(expression, dtype=float)
     if X.ndim != 2 or X.shape[1] < 2 or X.shape[0] < 3:
         return float("nan")
-    R = np.corrcoef(X.T)
+    # A constant (zero-variance) gene makes np.corrcoef divide by zero and emit a
+    # RuntimeWarning; the resulting NaN entries are dropped below by nanmean.
+    with np.errstate(invalid="ignore", divide="ignore"):
+        R = np.corrcoef(X.T)
     triu = R[np.triu_indices(R.shape[0], k=1)]
     vals = np.abs(triu)  # constant genes can yield NaN entries; ignore them
     return float(np.nanmean(vals)) if np.isfinite(vals).any() else float("nan")
