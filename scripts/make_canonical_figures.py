@@ -74,6 +74,42 @@ def _read_tagged(stem):
         "(run the full pipeline, or this figure needs per-fold outputs not in data_release/)"
     )
 
+
+def _load_perfold():
+    """Per-(holdout x fold x cell_type x method) selected genes for Figures 4 and S4.
+
+    Prefers the per-run qubo_run/ outputs (selected_genes_folds_*.csv under each
+    CSF tag directory). When those are absent (the reviewer-facing
+    reproduce_from_release.sh path), falls back to the shipped tidy release table
+    data_release/selected_genes_perfold.csv with columns:
+        holdout, fold, cell_type, method, gene
+    The returned frame always carries the columns downstream code expects
+    (method, cell_type, gene, fold, src), where `src` identifies the held-out
+    cohort so that unique (src, fold) pairs count panels correctly.
+    """
+    import glob
+    fs = sorted(glob.glob(str(RUN / TAG / "CSF" / "selected_genes_folds_*.csv"))
+                + glob.glob(str(RUN / (TAG + "_holdout_*") / "CSF" / "selected_genes_folds_*.csv")))
+    if fs:
+        parts = []
+        for f in fs:
+            d = pd.read_csv(f); d["src"] = f
+            parts.append(d)
+        return pd.concat(parts, ignore_index=True)
+    rel = RELEASE / "selected_genes_perfold.csv"
+    if rel.exists():
+        d = pd.read_csv(rel)
+        if "src" not in d.columns:
+            # one "source file" per held-out cohort, so unique (src, fold) pairs
+            # reproduce the up-to-15 panels-per-cell-type count.
+            d["src"] = d["holdout"] if "holdout" in d.columns else "release"
+        return d
+    raise FileNotFoundError(
+        f"no per-fold selection CSVs in {RUN}/ and no {rel} shipped "
+        "(Figures 4 and S4 need per-(holdout x fold) selection; add "
+        "data_release/selected_genes_perfold.csv or run the full pipeline)"
+    )
+
 plt.rcParams.update({"font.size": 10, "font.family": "DejaVu Sans",
                      "savefig.dpi": 300, "savefig.bbox": "tight",
                      "axes.spines.top": False, "axes.spines.right": False})
@@ -286,22 +322,26 @@ def figure4():
     and bold NPG-coloured x-labels mark genes mapped to a curated MS-relevant
     biology category. Selection frequency = % of that cell type's evaluable
     cohort-by-fold panels in which quboFS selected the gene."""
-    import glob
     from matplotlib.patches import Rectangle
-    fs = sorted(glob.glob(str(RUN / TAG / "CSF" / "selected_genes_folds_*.csv"))
-                + glob.glob(str(RUN / (TAG + "_holdout_*") / "CSF" / "selected_genes_folds_*.csv")))
-    parts = []
-    for f in fs:
-        d = pd.read_csv(f); d["src"] = f
-        parts.append(d)
-    df = pd.concat(parts, ignore_index=True)
-    q = df[df["method"] == "QUBO"].copy()
     cts = ["B", "Mono", "CD4_T", "CD8_T", "NK", "DC", "dnT", "gdT"]
-    # panels per cell type = unique (file, fold) pairs (3 cohorts × 5 folds = up to 15)
-    npan = {ct: max(q[q.cell_type == ct].drop_duplicates(["src", "fold"]).shape[0], 1)
-            for ct in cts}
-    cnt = q.groupby(["cell_type", "gene"]).size().rename("n").reset_index()
-    cnt["pct"] = cnt.apply(lambda r: r["n"] / npan[r["cell_type"]] * 100.0, axis=1)
+    try:
+        df = _load_perfold()
+        q = df[df["method"] == "QUBO"].copy()
+        # panels per cell type = unique (file, fold) pairs (3 cohorts × 5 folds = up to 15)
+        npan = {ct: max(q[q.cell_type == ct].drop_duplicates(["src", "fold"]).shape[0], 1)
+                for ct in cts}
+        cnt = q.groupby(["cell_type", "gene"]).size().rename("n").reset_index()
+        cnt["pct"] = cnt.apply(lambda r: r["n"] / npan[r["cell_type"]] * 100.0, axis=1)
+    except FileNotFoundError:
+        # Reviewer-facing fallback: the shipped aggregate data_release/selected_genes.csv
+        # already carries the QUBO selection frequency (folds) and the panel count per
+        # (cell type, gene), so the heat-map percentage is exactly reconstructable
+        # without the per-fold files:  pct = selection_freq / n_panels * 100.
+        agg = pd.read_csv(RELEASE / "selected_genes.csv")
+        cnt = agg.rename(columns={"selection_freq": "n"})[["cell_type", "gene", "n"]].copy()
+        cnt["pct"] = agg["selection_freq"] / agg["n_panels"] * 100.0
+        npan = agg.groupby("cell_type")["n_panels"].max().to_dict()
+        npan = {ct: int(npan.get(ct, 1)) for ct in cts}
     top, cols = {}, []
     for ct in cts:
         g = (cnt[cnt.cell_type == ct].sort_values(["pct", "gene"], ascending=[False, True])
@@ -359,6 +399,8 @@ def figureS2_ksweep():
     method. Skips gracefully if the sweep summary has not been generated yet."""
     path = RUN / "sweep_all_methods_K_summary.csv"
     if not path.exists():
+        path = RELEASE / "panel_size_sweep.csv"   # frozen release equivalent (same columns)
+    if not path.exists():
         print("skip figureS2_K_sweep (run sweep_collect.py first)")
         return
     s = pd.read_csv(path)
@@ -391,6 +433,8 @@ def figureS3_solver():
     """Solver sensitivity (Figure S3): SA vs exact QUBO optimum (Jaccard + energy
     gap). Skips gracefully if the summary has not been generated yet."""
     path = RUN / "solver_sensitivity_summary.csv"
+    if not path.exists():
+        path = RELEASE / "solver_sensitivity.csv"   # frozen release equivalent (per-panel)
     if not path.exists():
         print("skip figureS3_solver (run solver_sensitivity.py first)")
         return
@@ -425,15 +469,27 @@ def figureS4_recovery():
     B. per-cell-type ΔAUCell (MS − control) of the quboFS panels — drawn only if the
        06_aucell output (qubo_run/aucell_results/ms_vs_hd_diff_qubo.csv) is present
        (that step needs the full Seurat .rds)."""
-    import glob
-    fs = sorted(glob.glob(str(RUN / TAG / "CSF" / "selected_genes_folds_*.csv"))
-                + glob.glob(str(RUN / (TAG+"_holdout_*") / "CSF" / "selected_genes_folds_*.csv")))
-    df = pd.concat([pd.read_csv(f) for f in fs], ignore_index=True)
-    b = df[df["cell_type"] == "B"]
-    surv = [g for g in RAMESH_SIG if g in set(b["gene"])]
     methods = ["QUBO", "mRMR", "DE_top", "LASSO", "ElasticNet", "HVG"]
-    rec = {m: sum(1 for g in surv if g in set(b[b.method == m]["gene"])) for m in methods}
+    try:
+        df = _load_perfold()
+        b = df[df["cell_type"] == "B"]
+        surv = [g for g in RAMESH_SIG if g in set(b["gene"])]
+        rec = {m: sum(1 for g in surv if g in set(b[b.method == m]["gene"])) for m in methods}
+        n_surv = len(surv)
+    except FileNotFoundError:
+        # Reviewer-facing fallback: recovery counts per method are shipped as a
+        # frozen summary (data_release/bcell_signature_recovery.csv), so panel A is
+        # regenerable from the release without the per-fold selection files.
+        rel = RELEASE / "bcell_signature_recovery.csv"
+        if not rel.exists():
+            raise
+        rr = pd.read_csv(rel).set_index("method")
+        rec = {m: int(rr.loc[m, "n_recovered"]) for m in methods}
+        n_surv = int(rr["n_signature_surviving"].iloc[0])
+    surv = [None] * n_surv  # only its length is used below (axis label / ylim)
     aucell = RUN / "aucell_results" / "ms_vs_hd_diff_qubo.csv"
+    if not aucell.exists():
+        aucell = RELEASE / "aucell_ms_vs_hd_diff_qubo.csv"
     have_b = aucell.exists()
     fig, axes = plt.subplots(1, 2 if have_b else 1, figsize=(11 if have_b else 6.2, 4.4))
     axA = axes[0] if have_b else axes
