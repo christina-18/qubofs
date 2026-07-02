@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qubofs"
-version = "0.1.2"
+version = "0.1.4"
 description = "Cohort-consistency-aware QUBO feature selection for compact single-cell RNA-seq biomarker panels."
 readme = "README.md"
 requires-python = ">=3.10"
