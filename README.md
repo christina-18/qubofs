@@ -31,11 +31,15 @@ Feature selection (relevance, redundancy and a fixed panel size) is classifier-i
 ```bash
 git clone https://github.com/christina-18/qubofs.git
 cd qubofs
+python3 -m venv .venv          # create an isolated environment (recommended)
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e .
 ```
 
-Requires Python ≥ 3.10. The installable package depends only on **numpy and
-pandas** — the QUBO is solved by a classical simulated-annealing routine written
+Requires Python ≥ 3.10. Creating a virtual environment (`.venv` above) is
+recommended so the install does not touch your system Python; any name works,
+but `.venv` is conventional and already git-ignored. The installable package
+depends only on **numpy and pandas** — the QUBO is solved by a classical simulated-annealing routine written
 in pure NumPy (`qubofs.qubo`), so no QUBO-solver library is needed. These two
 dependencies are declared in `pyproject.toml` and installed automatically by
 `pip install -e .`. Optional extras are available for the figure scripts
@@ -77,6 +81,8 @@ python scripts/make_canonical_figures.py     # regenerate Figures 2–4 and supp
 ```
 
 The end-to-end pipeline (from the integrated Seurat object to `qubo_run/` outputs) is in `scripts/01_pipeline` → `scripts/04_aggregation` and is driven by `scripts/reproduce.sh`; see `docs/reproduction.md` for the step-by-step guide and `docs/method_details.md` for the method specification.
+
+> **The first two stages need R, not just Python.** Building the pseudobulk matrices and the differential-expression statistics (stages 1–2) runs in R ≥ 4.2 with Seurat, edgeR and limma (see `docs/R_dependencies.md`); these stages also require the integrated Seurat object, which is **not** shipped in this repository (build it from the public accessions in `docs/data_sources.md`). Everything downstream — QUBO selection, aggregation, and all figures/tables — is pure Python and can be run from the released `data_release/` tables **without** R or the Seurat object.
 
 ## Benchmark results (matched K = 10)
 

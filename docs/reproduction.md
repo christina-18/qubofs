@@ -8,7 +8,8 @@ from the released intermediate outputs in `data_release/`.
 ## 0. Prerequisites
 
 ### Hardware
-- ~16 GB RAM and a multi-core CPU (QUBO simulated annealing is CPU-only; no GPU or quantum hardware required)
+- Stages 3–4 (QUBO selection, aggregation, figures): ~16 GB RAM and a multi-core CPU (simulated annealing is CPU-only; no GPU or quantum hardware required)
+- Stages 0b–2 (loading the integrated Seurat object in R and building pseudobulk): **≥ 32 GB RAM recommended** — the integrated object is large (tens of GB in memory once loaded), so 16 GB is typically not enough for these stages
 - ~20 GB disk for intermediate pseudobulk matrices
 
 ### Software
@@ -25,8 +26,17 @@ pip install -e .          # installs the quboFS package (src/qubofs)
 Paths are read from environment variables (no config file needed):
 
 ```bash
-export QUBOFS_PROJECT_ROOT=/path/to/project_root
-export QUBOFS_SEURAT_RDS=/path/to/integrated_with_compartment.rds
+# Project root: where intermediate outputs (data/, qubo_run/) are written.
+# If you run from the cloned repository, the repo directory is a fine choice.
+# Use an absolute path ($(pwd)) rather than "." so the value survives any cd.
+export QUBOFS_PROJECT_ROOT="$(pwd)"
+
+# Annotated Seurat object used by stages 1–2. This is NOT a file shipped with
+# the repository and NOT a fixed pre-existing file: it is the OUTPUT you create
+# in step 0b below by adding a `compartment` column to your integrated object.
+# Point it at wherever step 0b writes (any filename; example uses the docs name).
+export QUBOFS_SEURAT_RDS="$QUBOFS_PROJECT_ROOT/data/integrated_with_compartment.rds"
+
 export QUBOFS_PSEUDOBULK_SUBDIR=pseudobulk_v5_compartment
 export QUBOFS_DEG_SOURCE=edger_counts                 # canonical relevance source
 export QUBOFS_RUN_TAG=primary_bio_edger_counts
@@ -35,16 +45,32 @@ export QUBOFS_FIXED_K=10                              # matched K = 10 for all m
 
 `scripts/reproduce.sh` sets these defaults and runs stages 1→4 end to end.
 
+> **What is the integrated Seurat object?** It is the SoupX-corrected, doublet-filtered,
+> Azimuth-annotated object with all four cohorts integrated (see `docs/data_sources.md`).
+> It is **not redistributed** in this repository — build it from the public accessions.
+> `QUBOFS_SEURAT_RDS_RAW` (step 0b) points at that integrated object; `QUBOFS_SEURAT_RDS`
+> points at the `compartment`-annotated copy that step 0b produces from it.
+
 ## 0b. Annotate the integrated object (compartment)
 
 `extract_pseudobulk.R` subsets the **CSF** compartment, which requires a
-`compartment` column in `meta.data`, reconstructed from the sample/tissue field:
+`compartment` column in `meta.data`, reconstructed from the sample identifier
+(`sid`) field. This step reads your integrated object (`..._RAW`) and writes a
+new annotated object (`QUBOFS_SEURAT_RDS`) — the file the later stages consume:
 
 ```bash
-export QUBOFS_SEURAT_RDS_RAW=/path/to/raw_integrated.rds
-export QUBOFS_SEURAT_RDS=/path/to/integrated_with_compartment.rds
+# Input: your integrated Seurat object (built from the public accessions).
+export QUBOFS_SEURAT_RDS_RAW=/path/to/integrated.rds
+# Output: created by this script; this is what QUBOFS_SEURAT_RDS must point to.
+export QUBOFS_SEURAT_RDS="$QUBOFS_PROJECT_ROOT/data/integrated_with_compartment.rds"
+mkdir -p "$(dirname "$QUBOFS_SEURAT_RDS")"
 Rscript scripts/01_pipeline/00_annotate_compartment.R
 ```
+
+The script requires a `sid` and `prj` column in `meta.data`; it sets
+`compartment = "CSF"` for samples whose `sid` contains "CSF" (else "PBMC"),
+prints a cohort × compartment table for a sanity check, and `saveRDS`es the
+result to `QUBOFS_SEURAT_RDS`.
 
 ## 1. Build per-donor pseudobulk per (cell type × tissue × fold)
 
