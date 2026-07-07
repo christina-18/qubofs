@@ -132,3 +132,36 @@ def per_cohort_auc_std(per_fold_metrics: "list[dict] | dict") -> float:
     if "holdout" not in df.columns or "auc" not in df.columns:
         raise ValueError("per_fold_metrics must contain 'holdout' and 'auc'")
     return float(df.groupby("holdout").auc.mean().std())
+
+
+def highcorr_pairs(expression: np.ndarray, threshold: float = 0.70) -> float:
+    """Number of highly-correlated gene pairs within a panel.
+
+    Counts the unordered gene pairs whose absolute Pearson correlation exceeds
+    ``threshold`` on the per-donor panel expression. This is an assay-design view
+    of within-panel redundancy: the count of near-duplicate marker pairs a panel
+    carries (Supplementary Table S8), complementary to the mean-|rho| summary
+    returned by :func:`within_panel_redundancy`.
+
+    Parameters
+    ----------
+    expression : ndarray, shape (n_samples, n_genes)
+        Per-donor expression of the K selected panel genes.
+    threshold : float, default 0.70
+        Absolute-correlation cutoff above which a pair is counted as redundant.
+
+    Returns
+    -------
+    float
+        Count of upper-triangular |Pearson r| entries strictly greater than
+        ``threshold``. Returns NaN if fewer than 2 genes or 3 samples.
+    """
+    X = np.asarray(expression, dtype=float)
+    if X.ndim != 2 or X.shape[1] < 2 or X.shape[0] < 3:
+        return float("nan")
+    with np.errstate(invalid="ignore", divide="ignore"):
+        R = np.corrcoef(X.T)
+    triu = np.abs(R[np.triu_indices(R.shape[0], k=1)])
+    if not np.isfinite(triu).any():
+        return float("nan")
+    return float((triu[np.isfinite(triu)] > threshold).sum())

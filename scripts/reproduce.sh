@@ -45,6 +45,7 @@ done
 echo "== 4/4  Aggregate metrics + within-panel redundancy (Python) =="
 python3 scripts/04_aggregation/aggregate_metrics.py
 python3 scripts/04_aggregation/within_panel_redundancy.py
+python3 scripts/04_aggregation/highcorr_pairs_per_panel.py
 python3 scripts/04_aggregation/build_table1.py
 
 echo "== Done. Canonical outputs under qubo_run/${QUBOFS_RUN_TAG}* =="

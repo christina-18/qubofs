@@ -28,13 +28,14 @@ Example
 """
 from __future__ import annotations
 
-__version__ = "0.1.2"
+__version__ = "0.1.4"
 __author__ = "Mizuho Asada"
 __license__ = "MIT"
 
 from qubofs.filter import CellTypeFilter, is_technical_gene, is_vdj_segment
 from qubofs.metrics import (
     balanced_accuracy,
+    highcorr_pairs,
     macro_f1,
     matthews_corr,
     roc_auc,
@@ -58,4 +59,5 @@ __all__ = [
     "matthews_corr",
     "balanced_accuracy",
     "within_panel_redundancy",
+    "highcorr_pairs",
 ]

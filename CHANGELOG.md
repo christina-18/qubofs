@@ -46,6 +46,11 @@ canonical configuration and current results are pinned in `PROVENANCE.md`.
   now state this.
 
 ### Added
+- **`highcorr_pairs` panel-quality metric** and the
+  `scripts/04_aggregation/highcorr_pairs_per_panel.py` aggregation script,
+  counting within-panel gene pairs with |Pearson r| > 0.70 as an assay-design
+  view of redundancy (Supplementary Table S8; released as
+  `data_release/highcorr_pairs_per_panel.csv`). Complements the mean-|ρ| summary.
 - **Optional Stage-0 technical-gene filter** (`is_technical_gene`,
   `CellTypeFilter(exclude_technical=...)`, `Pipeline(exclude_technical=...)`,
   `qubofs run --exclude-technical`), porting the manuscript's pre-selection

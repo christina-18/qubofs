@@ -1,0 +1,7 @@
+method,mean_highcorr_pairs_per_panel,n_panels,threshold_abs_r
+QUBO,1.76,119,0.7
+LASSO,2.18,119,0.7
+mRMR,3.13,119,0.7
+DE_top,7.0,119,0.7
+ElasticNet,9.35,119,0.7
+HVG,11.55,119,0.7

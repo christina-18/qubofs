@@ -15,6 +15,7 @@ Information.
 | `selected_genes.csv` | quboFS per-cell-type selection frequency across the 14–15 cohort×fold panels (`cell_type, gene, selection_freq, n_panels`). Source for Figure 4 and Supplementary Table S6. |
 | `within_panel_redundancy_summary.csv` | Mean within-panel \|ρ\| per method (n_panels). |
 | `within_panel_redundancy_perpanel.csv` | Per-panel \|ρ\| (method × holdout × fold × cell type) — input to the paired permutation test. |
+| `highcorr_pairs_per_panel.csv` | Mean number of highly-correlated (\|r\| > 0.70) gene pairs per panel, per method — assay-design view of within-panel redundancy (Supplementary Table S8). |
 | `threshold_sensitivity.csv` | Fixed-0.5 vs inner-CV-tuned threshold metrics per method (Supplementary Methods section 4). |
 | `permutation_tests.csv` | Paired sign-flip permutation tests, quboFS vs each baseline (Supplementary Table S3). |
 | `bootstrap_ci.csv` | Bootstrap 95% CIs per method × metric (Supplementary Table S3). |

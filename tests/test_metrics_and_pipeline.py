@@ -201,3 +201,21 @@ def test_quickstart_toy_files_have_expected_columns():
     # All toy metadata donors must appear in at least one pseudobulk matrix
     metadata_donors = set(meta["donor_id"])
     assert metadata_donors.issubset(set(pb_b.columns) | set(pb_m.columns))
+
+
+def test_highcorr_pairs_counts_and_threshold():
+    """highcorr_pairs counts |r|>thr pairs; matches within_panel_redundancy inputs."""
+    import numpy as np
+    from qubofs.metrics import highcorr_pairs
+    rng = np.random.default_rng(0)
+    base = rng.standard_normal(40)
+    # g0,g1 nearly identical (|r|~1); g2 independent.
+    g0 = base
+    g1 = base + 0.01 * rng.standard_normal(40)
+    g2 = rng.standard_normal(40)
+    X = np.column_stack([g0, g1, g2])           # (n_samples, n_genes)
+    assert highcorr_pairs(X, threshold=0.70) == 1.0     # only the g0-g1 pair
+    assert highcorr_pairs(X, threshold=0.999) in (0.0, 1.0)
+    # degenerate guards match within_panel_redundancy
+    assert np.isnan(highcorr_pairs(X[:2], threshold=0.70))          # <3 samples
+    assert np.isnan(highcorr_pairs(X[:, :1], threshold=0.70))       # <2 genes
