@@ -16,6 +16,10 @@ from the released intermediate outputs in `data_release/`.
 - Python ≥ 3.10 with the packages in `requirements.txt` (numpy, pandas, matplotlib; the QUBO solver is pure-NumPy, no solver library required)
 - R ≥ 4.2 with the packages in `docs/R_dependencies.md` (Seurat, edgeR, limma) — needed only for stages 1–2
 
+> All command-line examples in this document use **bash** syntax (macOS/Linux). In
+> other shells, adapt the shell-specific parts — chiefly `export VAR=value`, which
+> becomes `setenv VAR value` in csh/tcsh and `set -x VAR value` in fish.
+
 ```bash
 pip install -r requirements.txt
 pip install -e .          # installs the quboFS package (src/qubofs)
@@ -52,6 +56,18 @@ export QUBOFS_FIXED_K=10                              # matched K = 10 for all m
 > points at the `compartment`-annotated copy that step 0b produces from it.
 
 ## 0b. Annotate the integrated object (compartment)
+
+**Materials needed for this step (and where they come from):**
+
+1. **The integrated Seurat `.rds` file** (`QUBOFS_SEURAT_RDS_RAW`). This is the
+   SoupX-corrected, doublet-filtered, Azimuth-annotated object with all four
+   cohorts integrated. It is **not** shipped in this repository — build it from
+   the public accessions listed in [`docs/data_sources.md`](data_sources.md),
+   which gives every cohort, accession and the upstream preprocessing steps.
+2. **Two columns in `meta.data`**: `sid` (sample identifier — CSF samples carry
+   the substring "CSF") and `prj` (cohort/project label). `00_annotate_compartment.R`
+   reads these to build the `compartment` column and will stop with an error if
+   either is missing.
 
 `extract_pseudobulk.R` subsets the **CSF** compartment, which requires a
 `compartment` column in `meta.data`, reconstructed from the sample identifier

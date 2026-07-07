@@ -32,9 +32,13 @@ Feature selection (relevance, redundancy and a fixed panel size) is classifier-i
 git clone https://github.com/christina-18/qubofs.git
 cd qubofs
 python3 -m venv .venv          # create an isolated environment (recommended)
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+source .venv/bin/activate      # bash/zsh on macOS/Linux
 pip install -e .
 ```
+
+The `source` line above is for **bash/zsh** on macOS/Linux. For other shells use
+the matching activation script: `source .venv/bin/activate.csh` (csh/tcsh),
+`source .venv/bin/activate.fish` (fish), or `.venv\Scripts\activate` (Windows).
 
 Requires Python ≥ 3.10. Creating a virtual environment (`.venv` above) is
 recommended so the install does not touch your system Python; any name works,
