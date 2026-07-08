@@ -1,9 +1,29 @@
 # Data sources
 
-The four input CSF single-cell RNA-seq cohorts are publicly available from their
-original repositories and are **not redistributed in this repository**. Download
-them from the accessions below and place the integrated, SoupX-corrected Seurat
-object where `QUBOFS_SEURAT_RDS` points (see `docs/reproduction.md`).
+## What you need, and where it comes from
+
+**If you only want to reproduce the manuscript figures and tables**, you do
+**not** need the raw data at all: the released summary tables in `data_release/`
+are sufficient, and `python scripts/make_canonical_figures.py` regenerates the
+canonical figures from them. See the top-level `README.md` and
+`docs/reproduction.md` for that (Seurat-free) path.
+
+**Those `data_release/` tables were produced by the authors** from the raw
+single-cell data of the four published cohorts below, by running the full
+pipeline (`scripts/01_pipeline` → `scripts/04_aggregation`). The raw data
+themselves are publicly available but are **not redistributed in this
+repository** — download them from the accessions in the table below.
+
+- **Which files to download from each BioProject/GEO page, and how the
+  downloaded raw data were turned into each `data_release/*.csv` file, are
+  documented in [`data_release/README.md`](../data_release/README.md).** That
+  file is the entry point for anyone wanting to regenerate the released tables
+  from scratch.
+- Once you have built the integrated, SoupX-corrected Seurat object, place it
+  where `QUBOFS_SEURAT_RDS_RAW` points and follow `docs/reproduction.md` from
+  step 0b.
+
+## The four input cohorts
 
 | Cohort | Reference | Accession | Internal label (in scripts) | Donors (control / MS) |
 |---|---|---|---|---|
@@ -30,5 +50,6 @@ Upstream preprocessing before integration: ambient-RNA decontamination with Soup
 broad immune subsets (B, Mono, CD4_T, CD8_T, NK, DC, dnT, gdT).
 
 To reproduce the downstream analysis **without** the raw data, use the shipped
-`data_release/` tables and `examples/toy_data/` (synthetic) as described in the
-top-level `README.md`.
+`data_release/` tables (see [`data_release/README.md`](../data_release/README.md)
+for what each file is and how it was produced) and `examples/toy_data/`
+(synthetic), as described in the top-level `README.md` and `docs/reproduction.md`.

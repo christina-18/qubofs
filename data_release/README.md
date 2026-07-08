@@ -23,10 +23,39 @@ Information.
 | `solver_sensitivity.csv` | Simulated-annealing vs exact (brute-force) optimum per screened panel (Supplementary Figure S3, Supplementary Table S4). |
 | `pbmc_pooled_redundancy.csv`, `pbmc_pooled_table1.csv` | PBMC generalisation benchmark (Supplementary Table S7). |
 
-**Headline (matched K = 10):** quboFS has the **lowest within-panel redundancy of
-any method** (|ρ| = 0.247; significantly below every baseline, paired permutation
-all *p* < 0.001) while retaining competitive ROC-AUC (0.815, numerically highest
-but not significantly different among the disease-informed methods; vs Elastic Net
-*p* = 0.502). quboFS is a low-redundancy panel-design method, not an
-accuracy-maximiser. These values match the manuscript Table 2 and are reproduced
+## How these files were produced
+
+These tables are the frozen outputs of the analysis pipeline, run on the
+integrated Seurat object built from the four published cohorts (see
+[`../docs/data_sources.md`](../docs/data_sources.md) for the accessions and
+which files to download from each). The end-to-end procedure — from the raw
+counts to every CSV in this directory — is documented step by step in
+[`../docs/reproduction.md`](../docs/reproduction.md); the stage that writes each
+file is summarised below.
+
+| File | Produced by (from the repo root) | Stage |
+|---|---|---|
+| `metrics_cross_cohort.csv`, `metrics_per_cohort.csv` | `python scripts/04_aggregation/aggregate_metrics.py` | 4 |
+| `within_panel_redundancy_summary.csv`, `within_panel_redundancy_perpanel.csv` | `python scripts/04_aggregation/within_panel_redundancy.py` | 4 |
+| `highcorr_pairs_per_panel.csv` | `python scripts/04_aggregation/highcorr_pairs_per_panel.py` | 4 |
+| `threshold_sensitivity.csv` | `python scripts/04_aggregation/build_table1.py` | 4 |
+| `permutation_tests.csv`, `bootstrap_ci.csv` | `python scripts/04_aggregation/bootstrap_stats.py` | 4 (statistics) |
+| `selected_genes.csv` | `python scripts/03_selection/qubo_pipeline.py` (per holdout × fold), aggregated in stage 4 | 3–4 |
+| `panel_size_sweep.csv` | `bash scripts/run_K_sweep.sh` → `python scripts/04_aggregation/sweep_collect.py` | sensitivity |
+| `solver_sensitivity.csv` | `python scripts/04_aggregation/solver_sensitivity.py` | sensitivity |
+| `bcell_signature_recovery.csv` | per-method B-cell signature recovery from the stage-3 per-fold selections (see `docs/reproduction.md`); frozen here so Supplementary Figure S4 panel A regenerates without the full run | 3–4 |
+| `pbmc_pooled_redundancy.csv`, `pbmc_pooled_table1.csv` | PBMC-compartment generalisation benchmark (optional; Supplementary Table S7) | generalisation |
+
+Stages 1–4 are orchestrated by `scripts/reproduce.sh`; the three sensitivity /
+generalisation tables (`panel_size_sweep`, `solver_sensitivity`, PBMC) come from
+the optional analyses listed in `docs/reproduction.md`. All values are
+deterministic under the fixed seeds recorded in `docs/PROVENANCE.md`, so a fresh
+run reproduces these files exactly.
+
+**Headline (matched K = 10):** quboFS reduced within-panel redundancy below every
+baseline — the quantity its objective directly targets — (|ρ| = 0.247;
+significantly below every baseline, paired permutation all *p* < 0.001) while
+retaining competitive ROC-AUC (0.815, numerically highest but not significantly
+different among the disease-informed methods; vs Elastic Net *p* = 0.502). quboFS
+is a low-redundancy panel-design method, not an accuracy-maximiser. These values match the manuscript Table 2 and are reproduced
 by `metrics_cross_cohort.csv`.

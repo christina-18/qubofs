@@ -5,6 +5,17 @@ fixed **K = 10**) from raw data to the manuscript figures and tables. Stages 1�
 require the integrated Seurat object; stages 3–4 and the figure/table scripts run
 from the released intermediate outputs in `data_release/`.
 
+> **Scope of this document.** This guide describes how to reproduce the
+> manuscript's figures and quantitative tables from the released
+> `data_release/*.csv` files (and, for the full path, from the raw data). For a
+> per-file account of **how each `data_release/*.csv` was produced** — which
+> accession the raw data came from and which script writes it — see
+> [`../data_release/README.md`](../data_release/README.md) and
+> [`data_sources.md`](data_sources.md). The three documents are meant to be read
+> together: `data_sources.md` (where the raw data are) →
+> `data_release/README.md` (how the CSVs were made) → this file (how to
+> reproduce the manuscript from them).
+
 ## 0. Prerequisites
 
 ### Hardware
