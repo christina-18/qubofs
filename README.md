@@ -1,152 +1,138 @@
 # quboFS
 
-**quboFS** is a Python package for low-redundancy, QUBO-based feature selection from donor-level single-cell RNA-seq (scRNA-seq) pseudobulk data.
+**quboFS** selects compact, low-redundancy gene panels per cell type from donor-level
+single-cell RNA-seq (scRNA-seq) pseudobulk data. Gene relevance, pairwise redundancy and
+panel size are optimised jointly as a Quadratic Unconstrained Binary Optimization (QUBO)
+problem, solved by classical simulated annealing (no quantum hardware). Selection is
+independent of the downstream classifier.
 
-It selects compact, cell-type-specific gene panels by jointly optimising case-control relevance, cross-cohort consistency, within-panel redundancy and a fixed panel size, formulated as a Quadratic Unconstrained Binary Optimization (QUBO) problem and solved by classical simulated annealing. The method is classifier-independent: feature selection is decoupled from the downstream classifier.
+The method was developed and benchmarked for multiple sclerosis (MS) versus control
+classification on four public cerebrospinal fluid (CSF) scRNA-seq cohorts, with
+leave-one-cohort-out validation inside a leak-free nested cross-validation, and applied
+to two blood (PBMC) cohorts.
 
-The framework was developed and benchmarked for multiple sclerosis (MS) versus control classification using four publicly available cerebrospinal fluid (CSF) scRNA-seq cohorts. Three cohorts with MS and control donors (Pappalardo, Heming, Ramesh) were used as leave-one-cohort-out (LOCO) held-out cohorts, while the Touil control-only cohort was retained in training.
+This repository contains the installable package (`src/qubofs`, selection step) and the
+complete manuscript analysis (`scripts/`). Version 0.2.0 corresponds to the revised
+manuscript; the earlier analysis is archived as v0.1.4.
 
 ## Pipeline at a glance
 
 ```mermaid
 flowchart TD
-    A["4 CSF scRNA-seq cohorts<br/>50 donors"] --> B["Cell-type annotation<br/>8 immune cell types"]
-    B --> C["Per-donor pseudobulk<br/>per cell type"]
-    C --> D["Cell-type-aware gene filter"]
-    D --> E["Relevance |z_i|·C_i"]
-    D --> F["Redundancy |ρ_ij|"]
-    E --> G["QUBO selection"]
-    F --> G
-    G --> H["Compact K = 10 panel<br/>per cell type"]
-    H --> I["Per-cell-type classifier<br/>+ soft voting"]
-    I --> J["MS vs control prediction<br/>(LOCO validation)"]
+    A["4 CSF scRNA-seq cohorts<br/>48 donors, 8 immune cell types"] --> B["Donor x cell-type pseudobulk<br/>(all genes)"]
+    B --> C["Training donors only:<br/>edgeR filterByExpr + QL test"]
+    C --> D["Relevance |z_i|·C_i<br/>top-20 candidate pool"]
+    C --> E["Redundancy |r_ij|"]
+    D --> F["QUBO selection<br/>(target K = 10 genes per cell type)"]
+    E --> F
+    F --> G["Per-cell-type L2 logistic regression"]
+    G --> H["Cell-type-weighted soft vote<br/>(weights from inner CV)"]
+    H --> I["Held-out cohort prediction"]
 ```
 
-Feature selection (relevance, redundancy and a fixed panel size) is classifier-independent and is solved by classical simulated annealing; no quantum hardware was used. The classifier is held fixed across all methods, so performance differences reflect the feature selector rather than the model.
+Everything that uses diagnosis labels — the edgeR gene universe and statistics, gene
+selection, the choice of λ and γ, the classifiers and the cell-type weights — is computed
+within training folds. Held-out cohorts are used only for prediction.
 
-> **Scope of the installable package.** The `qubofs` package (the `Pipeline` class) performs the **feature-selection** steps only (cell-type filtering → relevance/redundancy → QUBO panel). The per-cell-type classifier, soft voting and leave-one-cohort-out benchmark shown at the bottom of the diagram live in `scripts/`, not in `Pipeline`.
+## Method summary
+
+For each cell type and training set, quboFS selects **x** ∈ {0,1}^20 over the 20 most
+relevant candidate genes by minimising
+
+```
+H(x) = − Σ_i s_i x_i  +  γ Σ_{i≠j} |r_ij| x_i x_j  +  λ ( Σ_i x_i − K )²
+```
+
+- `s_i`: relevance `|z_i|·C_i` scaled to [0, 1], where `z_i` is the edgeR MS-versus-control
+  statistic and `C_i` the fraction of training cohorts agreeing in direction;
+- `r_ij`: Pearson correlation of the genes across training donors;
+- `K = 10` (soft constraint; a panel can have fewer genes when the remaining candidates are
+  redundant), `λ ∈ {2, 5}` and `γ ∈ {0.5, 1}` chosen by inner cross-validation.
+
+Comparators (DE-top, mRMR, LASSO, elastic net) use the same candidate pool, panel size,
+classifier and ensemble. Full specification: `docs/method_details.md`.
 
 ## Installation
 
 ```bash
 git clone https://github.com/christina-18/qubofs.git
 cd qubofs
-python3 -m venv .venv          # create an isolated environment (recommended)
-source .venv/bin/activate      # bash/zsh on macOS/Linux
-pip install -e .
+python3 -m venv .venv && source .venv/bin/activate
+pip install -e .                    # package: numpy + pandas only
+pip install -r requirements.txt     # manuscript analysis: adds scipy, matplotlib
 ```
 
-The `source` line above is for **bash/zsh** on macOS/Linux. For other shells use
-the matching activation script: `source .venv/bin/activate.csh` (csh/tcsh),
-`source .venv/bin/activate.fish` (fish), or `.venv\Scripts\activate` (Windows).
+Python ≥ 3.10. The R preprocessing needs R ≥ 4.2 with Seurat (v5), Matrix, edgeR and dplyr.
 
-Requires Python ≥ 3.10. Creating a virtual environment (`.venv` above) is
-recommended so the install does not touch your system Python; any name works,
-but `.venv` is conventional and already git-ignored. The installable package
-depends only on **numpy and pandas** — the QUBO is solved by a classical simulated-annealing routine written
-in pure NumPy (`qubofs.qubo`), so no QUBO-solver library is needed. These two
-dependencies are declared in `pyproject.toml` and installed automatically by
-`pip install -e .`. Optional extras are available for the figure scripts
-(`pip install "qubofs[figures]"`), the test suite (`qubofs[test]`, adds
-scikit-learn for metric cross-checks) and alternative QUBO back-ends
-(`qubofs[solvers]`, adds dwave-samplers).
-
-To reproduce the manuscript figures and the full analysis environment (which
-additionally needs matplotlib and tqdm), install the pinned reproduction
-requirements:
+## Quick start (package)
 
 ```bash
-pip install -r requirements.txt
+python examples/quickstart.py       # synthetic toy data, no R or patient data needed
 ```
 
-For development (tests, linting, type-checking, docs and the manuscript build),
-install the optional dev extras:
+```python
+from qubofs import Pipeline
+pipe = Pipeline(K=10, gamma=0.5, lambda_=2.0)          # solver="exact" for the exact minimum
+pipe.fit(pseudobulk_per_celltype, donor_meta, relevance_per_celltype)
+pipe.selected_panels_
+```
+
+`relevance_per_celltype` holds, per cell type, the absolute edgeR statistic of the genes
+kept by `edgeR::filterByExpr` on the training donors. `qubofs.ensemble` provides the
+cell-type weights and weighted soft vote; the CLI is `qubofs run` / `qubofs info`.
+
+## Reproducing the manuscript
 
 ```bash
-pip install -e ".[dev]"
+export QUBOFS_SEURAT_RDS_RAW=... QUBOFS_SEURAT_RDS=... QUBOFS_SEURAT_RDS_CLEAN=...
+export QUBOFS_DATA_DIR=/path/to/data QUBOFS_RESULTS_DIR=/path/to/results
+bash scripts/01_preprocessing/run_preprocessing.sh    # R: pseudobulk and edgeR per training set
+bash scripts/02_benchmark/run_all.sh                  # nested CV, 5 methods, CSF and PBMC
+bash scripts/03_evaluation/run_all.sh                 # statistics, sensitivity analyses, figures
 ```
 
-## Quick start
+The raw data are public but not redistributed (accessions in `docs/reproduction.md`). The
+fixed outer folds are in `data_release/fold_assignments.csv`. All seeds are fixed.
 
-A minimal, Seurat-free demonstration on small synthetic pseudobulk matrices:
+## Main results (CSF, 3 held-out cohorts × 5 outer-fold models)
 
-```bash
-python examples/quickstart.py
-```
+| Method | ROC-AUC | PR-AUC | Brier | Within-panel \|r\| (training) |
+|---|---:|---:|---:|---:|
+| quboFS | 0.883 | 0.922 | 0.234 | **0.226** |
+| Elastic net | 0.869 | 0.908 | 0.236 | 0.343 |
+| mRMR | 0.853 | 0.900 | 0.237 | 0.293 |
+| LASSO | 0.829 | 0.883 | 0.242 | 0.329 |
+| DE-top | 0.819 | 0.867 | 0.241 | 0.350 |
 
-This runs the full quboFS selection on toy data (`examples/toy_data/`) and prints the selected per-cell-type panels — no real patient data or R required.
-
-## Reproducing the manuscript figures and tables
-
-The canonical result tables for all methods are shipped in `data_release/` (matched fixed panel size K = 10, run tag `primary_bio_edger_counts`, fixed seeds), so the main tables and figures can be checked without re-running the full pipeline:
-
-```bash
-python scripts/make_canonical_figures.py     # regenerate Figures 2–4 and supplementary figures
-```
-
-The end-to-end pipeline (from the integrated Seurat object to `qubo_run/` outputs) is in `scripts/01_pipeline` → `scripts/04_aggregation` and is driven by `scripts/reproduce.sh`; see `docs/reproduction.md` for the step-by-step guide and `docs/method_details.md` for the method specification.
-
-> **The first two stages need R, not just Python.** Building the pseudobulk matrices and the differential-expression statistics (stages 1–2) runs in R ≥ 4.2 with Seurat, edgeR and limma (see `docs/R_dependencies.md`); these stages also require the integrated Seurat object, which is **not** shipped in this repository (build it from the public accessions in `docs/data_sources.md`). Everything downstream — QUBO selection, aggregation, and all figures/tables — is pure Python and can be run from the released `data_release/` tables **without** R or the Seurat object.
-
-## Benchmark results (matched K = 10)
-
-All six methods were compared at a matched, fixed panel size of **K = 10 genes per cell type** under leave-one-cohort-out validation (means over the three held-out cohorts, each a mean over five inner-CV folds, fixed 0.5 threshold). quboFS is a low-redundancy **panel-design** method: it produced the **lowest within-panel redundancy of any method** while retaining competitive ROC-AUC (numerically highest, but not significantly different among the disease-informed methods). The contribution is the redundancy reduction at competitive accuracy — quboFS is a panel-design method, not an accuracy maximiser.
-
-| Method | ROC-AUC | MCC | Macro-F1 | Balanced Accuracy | σ_AUC | Mean within-panel \|ρ\| |
-|---|---:|---:|---:|---:|---:|---:|
-| quboFS | **0.815** | 0.255 | 0.488 | 0.623 | 0.128 | **0.247** |
-| Elastic Net | 0.792 | 0.278 | **0.535** | **0.651** | 0.120 | 0.447 |
-| mRMR | 0.813 | **0.283** | 0.513 | 0.636 | 0.094 | 0.279 |
-| DE-top | 0.807 | 0.261 | 0.505 | 0.629 | 0.114 | 0.375 |
-| LASSO | 0.776 | 0.167 | 0.451 | 0.584 | **0.084** | 0.296 |
-| HVG | 0.689 | 0.264 | 0.487 | 0.619 | 0.233 | 0.465 |
-
-quboFS had significantly lower within-panel redundancy than every baseline (paired permutation, all *p* < 0.001); ROC-AUC differences among the disease-informed methods were not significant (quboFS highest numerically; vs Elastic Net *p* = 0.502). These values are reproduced exactly by `data_release/metrics_cross_cohort.csv`.
-
-In the primary benchmark **K is fixed at 10 for all methods**; γ and λ are tuned by inner five-fold cross-validation, and K is varied only in the sensitivity analysis. In that sweep quboFS is reported for **K ≤ 15** because the QUBO step follows a top-20 sure-independence screen (larger K are shown for baselines only).
-
-## Method summary
-
-For each cell type and training split, quboFS selects a binary vector **x** ∈ {0,1}^N over the N candidate genes (x_i = 1 means gene i is selected) by minimising:
-
-```
-H(x) = - α Σ_i  r̃_i x_i                  (relevance reward)
-       + γ Σ_{i≠j} |ρ_ij| x_i x_j         (pairwise redundancy penalty)
-       + λ ( (Σ_i x_i) - K )^2            (soft cardinality constraint)
-```
-
-(The redundancy term is the symmetric quadratic form `γ·xᵀRx` with `R = |ρ|`
-and zero diagonal, i.e. the sum over ordered pairs `i ≠ j`; this is twice the
-sum over unordered pairs `i < j`. The factor is absorbed into the
-cross-validated `γ`.)
-
-- **Relevance** `r̃_i`: cohort-consistency-weighted relevance score `|z_i|·C_i`, min-max rescaled to [0, 1]. `z_i` is the edgeR MS-versus-control test statistic; `C_i` is the cross-cohort consistency.
-- **Redundancy** `ρ_ij`: Pearson correlation between genes i and j across training-donor pseudobulk; the absolute value treats positive and negative correlations as equally redundant.
-- **Cardinality** `K`: target panel size; the soft penalty drives the solution toward exactly K genes.
-
-`α = 1` and `K = 10` are fixed in the primary benchmark; `γ` and `λ` are selected by inner five-fold cross-validation within the training cohorts (held-out labels are never used). `K` is varied only in the panel-size sensitivity analysis. A two-stage screen-then-optimise design passes the top-20 sure-independence-screened genes per cell type to a classical simulated-annealing solver (pure-NumPy implementation, 30 reads × 600 sweeps; no quantum hardware). The QUBO matrix is solver-agnostic and is in principle compatible with `dwave-samplers` (simulated-annealing / Tabu) or quantum-annealing back-ends. Per-cell-type panels are combined by unweighted soft voting into donor-level predictions. Full specification in `docs/method_details.md`.
+Mean over the three held-out cohorts (cell-type-weighted soft vote). quboFS had the lowest
+within-panel redundancy against every comparator in all 8 cell types (cell-type-level
+sign-flip test, Holm-adjusted p = 0.031), also when the comparators were restricted to the
+quboFS panel size. Its ROC-AUC did not differ from elastic net or mRMR (95% donor-bootstrap
+intervals of the differences include 0). In the PBMC nested CV, quboFS again had the lowest
+redundancy (0.305 vs 0.376–0.470) with within-cohort ROC-AUC 0.854 (comparators
+0.823–0.884). quboFS is a panel-design method: the contribution is lower redundancy at
+comparable accuracy, not higher accuracy. Per-model results: `data_release/`.
 
 ## Repository layout
 
 ```
 qubofs/
-├── src/qubofs/        # installable package (filter, relevance, qubo, pipeline, metrics, cli)
-├── examples/          # quickstart.py + synthetic toy_data/
-├── scripts/           # full analysis pipeline (01_pipeline → 04_aggregation) + figures
-├── data_release/      # canonical result tables (matched K = 10); see data_release/README.md
-├── figures/           # manuscript figures (PDF/PNG) + supplementary/
-├── docs/              # reproduction.md, data_sources.md, method_details.md, PROVENANCE.md
-├── tests/             # unit tests (pytest)
-├── pyproject.toml, requirements.txt, CITATION.cff, LICENSE, CHANGELOG.md
+├── src/qubofs/          # package: relevance, QUBO (SA / exact), pipeline, ensemble, filters, metrics, CLI
+├── scripts/
+│   ├── 01_preprocessing/   # R: cleaning, pseudobulk, edgeR for every training set
+│   ├── 02_benchmark/       # Python: nested CV, quboFS and 4 comparators, CSF and PBMC
+│   └── 03_evaluation/      # Python: performance, redundancy, stability, sensitivity, figures
+├── examples/            # quickstart.py + synthetic toy_data/
+├── tests/               # pytest
+├── data_release/        # fold assignments, selected genes, benchmark results
+└── docs/                # method_details.md, reproduction.md
 ```
-
-## Data availability
-
-The four input CSF cohorts are publicly available from their original repositories and are **not redistributed here**. Download them from the accessions listed in `docs/data_sources.md`. This repository ships synthetic toy data (`examples/toy_data/`) and the processed summary tables (`data_release/`) needed to reproduce the published results.
 
 ## Citation
 
-If you use quboFS, please cite the manuscript and software (see `CITATION.cff`). The software version and test data used in the manuscript are archived on Zenodo: https://doi.org/10.5281/zenodo.21133701. This repository (`christina-18/qubofs`) is maintained by the corresponding author, M. Asada.
+Please cite the manuscript and the software (`CITATION.cff`). Software releases are
+archived on Zenodo (v0.1.4: https://doi.org/10.5281/zenodo.21133701). Maintained by the
+corresponding author, M. Asada.
 
 ## Licence
 

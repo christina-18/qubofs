@@ -4,13 +4,13 @@ This package implements the QUBO feature-selection framework described in
 the accompanying manuscript by Asada et al. The core pipeline consists of four
 modular components:
 
-1. **Cell-type-aware filtering** (Stage 1: detection rate; Stage 2: cell-type
-   specificity; Stage 3: V(D)J variable-segment exclusion) — see :mod:`filter`.
-2. **Cohort-consistency-weighted relevance scoring** — see :mod:`relevance`.
-3. **QUBO matrix construction and simulated-annealing-based selection**
-   — see :mod:`qubo`.
-4. **End-to-end Pipeline** integrating the above components for scRNA-seq
-   pseudobulk feature selection — see :mod:`pipeline`.
+1. **Cohort-consistency-weighted relevance scoring** (|z_i| * C_i) — see :mod:`relevance`.
+2. **QUBO matrix construction and selection** by simulated annealing or exact
+   enumeration — see :mod:`qubo`.
+3. **End-to-end Pipeline** for per-cell-type selection from pseudobulk — see
+   :mod:`pipeline` (candidate universe: genes kept by ``edgeR::filterByExpr``; optional
+   filters in :mod:`filter`).
+4. **Cell-type-weighted soft voting** of per-cell-type classifiers — see :mod:`ensemble`.
 
 Example
 -------
@@ -28,11 +28,12 @@ Example
 """
 from __future__ import annotations
 
-__version__ = "0.1.4"
+__version__ = "0.2.0"
 __author__ = "Mizuho Asada"
 __license__ = "MIT"
 
-from qubofs.filter import CellTypeFilter, is_technical_gene, is_vdj_segment
+from qubofs.ensemble import celltype_weights, weighted_soft_vote, within_cohort_auc
+from qubofs.filter import CellTypeFilter, is_igv_or_hb, is_technical_gene, is_vdj_segment
 from qubofs.metrics import (
     balanced_accuracy,
     highcorr_pairs,
@@ -42,12 +43,17 @@ from qubofs.metrics import (
     within_panel_redundancy,
 )
 from qubofs.pipeline import Pipeline
-from qubofs.qubo import QUBOSelector, simulated_annealing
+from qubofs.qubo import QUBOSelector, exact_minimum, simulated_annealing
 from qubofs.relevance import CohortConsistency
 
 __all__ = [
     "__version__",
     "CellTypeFilter",
+    "is_igv_or_hb",
+    "celltype_weights",
+    "weighted_soft_vote",
+    "within_cohort_auc",
+    "exact_minimum",
     "is_technical_gene",
     "is_vdj_segment",
     "CohortConsistency",

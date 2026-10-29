@@ -1,22 +1,9 @@
-# Python dependencies to reproduce the qubofs MS CSF scRNA-seq benchmark and
-# figures. Python >= 3.10. Install with: pip install -r requirements.txt
-#
-# Scope: this is the full reproduction environment for scripts/ (the analysis
-# pipeline and figure generation). The installable package itself needs only
-# numpy + pandas (see pyproject.toml); `pip install -e .` is sufficient to use
-# the qubofs API and CLI.
-
-# Core scientific stack (used by the package, the pipeline and the figures).
+# Python dependencies of the manuscript analysis (scripts/02_benchmark, scripts/03_evaluation).
+# Python >= 3.10. Install with: pip install -r requirements.txt
+# The installable package itself needs only numpy + pandas (pip install -e .).
 numpy>=1.24
 pandas>=2.0
-
-# Figures only: scripts/make_canonical_figures.py.
-matplotlib>=3.7
-
-# The QUBO is solved by a classical simulated-annealing implementation written in
-# pure NumPy (qubofs.qubo.simulated_annealing for the package;
-# scripts/03_selection/qubo_utils.solve_qubo_sa for the manuscript pipeline).
-# No QUBO-solver library is required, and none is imported anywhere in this repo.
-# The QUBO matrix is solver-agnostic; to experiment with alternative back-ends
-# (dwave simulated annealing / Tabu / quantum) install the optional extra:
-#   pip install "qubofs[solvers]"
+scipy>=1.10        # reading .mtx pseudobulk files; hierarchical clustering and tests in 03_evaluation
+matplotlib>=3.7    # figures
+# The QUBO is solved by simulated annealing written in NumPy (scripts/02_benchmark/qubo_core.py,
+# qubofs.qubo.simulated_annealing) or exactly by enumeration; no QUBO-solver library is needed.

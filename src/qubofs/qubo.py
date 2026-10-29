@@ -9,9 +9,9 @@ The QUBO objective for cell-type-specific feature selection is
 
 with :math:`\\mathbf{x} \\in \\{0,1\\}^N`. The three terms encode relevance,
 pairwise non-redundancy and a soft cardinality constraint. The objective is
-solved approximately via classical simulated annealing (default 30 reads × 600
-sweeps) for reproducibility on standard hardware; no global-optimality guarantee
-is claimed. The QUBO matrix is solver-agnostic and is in principle compatible
+solved by classical simulated annealing (default 30 reads × 600 sweeps; no
+global-optimality guarantee) or, for up to 20 candidate features, exactly by
+enumeration (:func:`exact_minimum`; used in the manuscript as a sensitivity analysis). The QUBO matrix is solver-agnostic and is in principle compatible
 with iterated Tabu Search, classical or quantum annealing back-ends.
 
 References
@@ -124,6 +124,46 @@ def simulated_annealing(
     return (best_x > 0.5).astype(np.int8), best_E
 
 
+def exact_minimum(
+    relevance: np.ndarray,
+    redundancy: np.ndarray,
+    K: int,
+    *,
+    alpha: float = 1.0,
+    gamma: float = 0.5,
+    lambda_: float = 2.0,
+    max_features: int = 20,
+) -> tuple[np.ndarray, float]:
+    """Global minimum of the same QUBO objective by enumerating all 2^N binary vectors.
+
+    Feasible for N <= ``max_features`` (2^20 states: about a second and 0.2 GB of memory). Ties are
+    broken by the lowest enumeration index (bit i of the index = feature i).
+
+    Returns
+    -------
+    x_best : ndarray of int8, shape (N,)
+    energy_best : float
+    """
+    relevance = np.asarray(relevance, dtype=np.float64)
+    redundancy = np.array(redundancy, dtype=np.float64, copy=True)
+    if relevance.ndim != 1:
+        raise ValueError("relevance must be 1-D")
+    if redundancy.shape != (relevance.size, relevance.size):
+        raise ValueError("redundancy shape must match relevance length")
+    N = relevance.size
+    if K < 1 or K > N:
+        raise ValueError("K must be between 1 and the number of candidate features")
+    if N > max_features:
+        raise ValueError(f"exact enumeration is limited to {max_features} features (got {N})")
+    np.fill_diagonal(redundancy, 0.0)
+    idx = np.arange(2 ** N, dtype=np.uint64)
+    X = ((idx[:, None] >> np.arange(N, dtype=np.uint64)) & 1).astype(np.float64)
+    size = X.sum(axis=1)
+    E = -alpha * (X @ relevance) + gamma * np.einsum("ij,ij->i", X @ redundancy, X) + lambda_ * (size - K) ** 2
+    best = int(np.argmin(E))
+    return X[best].astype(np.int8), float(E[best])
+
+
 @dataclass
 class QUBOSelector:
     """Sklearn-style QUBO feature selector with simulated annealing.
@@ -144,6 +184,9 @@ class QUBOSelector:
         If True, rescale ``relevance`` to [0, 1] before SA.
     seed : int or None
         RNG seed.
+    solver : {"sa", "exact"}, default "sa"
+        Simulated annealing (manuscript primary analysis) or exact enumeration
+        (:func:`exact_minimum`; up to 20 candidate features).
 
     Attributes
     ----------
@@ -165,24 +208,30 @@ class QUBOSelector:
     t_min: float = 0.01
     rescale_relevance: bool = True
     seed: int | None = None
+    solver: str = "sa"
 
     selected_indices_: np.ndarray | None = field(default=None, init=False, repr=False)
     selected_mask_: np.ndarray | None = field(default=None, init=False, repr=False)
     energy_: float | None = field(default=None, init=False, repr=False)
 
     def fit_select(self, relevance: np.ndarray, redundancy: np.ndarray) -> "QUBOSelector":
-        """Run SA and store selected indices in ``self.selected_indices_``."""
+        """Solve the QUBO and store selected indices in ``self.selected_indices_``."""
         r = np.asarray(relevance, dtype=np.float64)
         if self.rescale_relevance and r.size > 1:
             r_min, r_max = r.min(), r.max()
             denom = max(r_max - r_min, 1e-9)
             r = (r - r_min) / denom
-        mask, energy = simulated_annealing(
-            r, redundancy, self.K,
-            alpha=self.alpha, gamma=self.gamma, lambda_=self.lambda_,
-            n_reads=self.sa_reads, n_sweeps=self.sa_sweeps,
-            t_max=self.t_max, t_min=self.t_min, seed=self.seed,
-        )
+        if self.solver == "exact":
+            mask, energy = exact_minimum(r, redundancy, self.K, alpha=self.alpha, gamma=self.gamma, lambda_=self.lambda_)
+        elif self.solver == "sa":
+            mask, energy = simulated_annealing(
+                r, redundancy, self.K,
+                alpha=self.alpha, gamma=self.gamma, lambda_=self.lambda_,
+                n_reads=self.sa_reads, n_sweeps=self.sa_sweeps,
+                t_max=self.t_max, t_min=self.t_min, seed=self.seed,
+            )
+        else:
+            raise ValueError(f"solver must be 'sa' or 'exact', got {self.solver!r}")
         self.selected_mask_ = mask
         self.selected_indices_ = np.where(mask == 1)[0]
         self.energy_ = energy

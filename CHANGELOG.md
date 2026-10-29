@@ -1,15 +1,50 @@
 # Changelog
 
-All notable changes to the quboFS analysis pipeline are recorded here.
+All notable changes to quboFS are recorded here. Version 0.2.0 is the configuration of the
+revised manuscript; entries below it are the history of the 0.1.x releases (archived on
+Zenodo) and describe that earlier analysis.
 
-**Current canonical configuration:** edgeR count-based pseudobulk relevance
-(`QUBOFS_DEG_SOURCE=edger_counts`) with run tag `primary_bio_edger_counts`. The
-current manuscript, Supplementary Information and released benchmark tables are
-based on this configuration. Earlier DESeq2-primary entries below are retained as
-historical development records only and are superseded by version 2.0.0. The
-canonical configuration and current results are pinned in `PROVENANCE.md`.
+## [0.2.0] - 2026-10-22
 
-## [Unreleased]
+Revised analysis. The selection objective (|z|·C relevance, |r| redundancy (absolute Pearson correlation), soft
+cardinality K = 10, top-20 pool, λ ∈ {2, 5}, γ ∈ {0.5, 1}, simulated annealing 30 × 600)
+and the per-cell-type classifier (L2 logistic regression, C = 1) are unchanged.
+
+### Changed
+- **Data cleaning.** The 2 Ramesh CIS donors are excluded (MS group = MS only), and
+  re-sequenced copies of the same 10x library (Heming) are counted once.
+- **Pseudobulk over all genes.** The highly-variable-gene restriction and the gene-name
+  technical filter are removed.
+- **Candidate universe = `edgeR::filterByExpr` on the training donors.** The cell-type
+  detection (≥ 70%) and specificity (≥ 0.7) criteria and the V(D)J exclusion are no longer
+  applied (`CellTypeFilter` remains available as an option). The comparators use the same
+  top-20 pool as quboFS (previously top 100).
+- **Leak-free nested cross-validation.** Within each leave-one-cohort-out setting, 5 outer
+  folds × 5 inner folds; edgeR statistics, gene universe, selection and classifiers are
+  recomputed on every inner-training set, and λ/γ (quboFS) and C (LASSO, elastic net) are
+  chosen from inner out-of-fold predictions (within-cohort stratified ROC-AUC). Held-out
+  cohorts are used only for prediction.
+- **Cell-type-weighted soft vote** (α = 0.5; weights from inner out-of-fold ROC-AUC per
+  cell type) instead of the unweighted mean.
+- **PBMC analysis** as donor-level nested CV (5 folds × 3 repeats) with a 2-split LOCO
+  reference.
+- Repository reorganised: `scripts/01_preprocessing` (R), `scripts/02_benchmark`,
+  `scripts/03_evaluation`; inputs and outputs set by `QUBOFS_DATA_DIR` and
+  `QUBOFS_RESULTS_DIR`. The 0.1.x scripts, figures and result tables were removed (they
+  remain in the v0.1.4 release).
+
+### Added
+- Sensitivity analyses: Ig V/J/D and haemoglobin genes excluded (`--filter
+  edger_noIgV_Hb`); exact QUBO solution by enumeration (`--solver exact`); comparators
+  re-selected at the quboFS panel size.
+- Package: `exact_minimum` and `QUBOSelector(solver="exact")`; `Pipeline(candidate_filter=...,
+  solver=...)`; `is_igv_or_hb`; `qubofs.ensemble` (`within_cohort_auc`,
+  `celltype_weights`, `weighted_soft_vote`); CLI options `--candidate-filter`, `--solver`.
+- `data_release/fold_assignments.csv` (outer folds), selected genes and benchmark results.
+- Brier score; stability (Nogueira, module level); donor-bootstrap inference with
+  cell-type-level paired tests for redundancy.
+
+## [0.1.x] - unreleased fixes after 0.1.4
 
 ### Fixed
 - **Public QUBO API silently corrupted results for a natural correlation matrix.**

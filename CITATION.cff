@@ -5,9 +5,10 @@ title: >-
 message: >-
   If you use this software, please cite using the metadata below.
 type: software
-version: 0.1.4
-doi: 10.5281/zenodo.21133701
-date-released: "2026-07-02"
+version: 0.2.0
+# doi: add the Zenodo DOI of the v0.2.0 release once it is archived
+#      (10.5281/zenodo.21133701 is the v0.1.4 archive).
+date-released: "2026-10-22"
 authors:
   - given-names: Mizuho
     family-names: Asada
@@ -41,16 +42,16 @@ abstract: >-
   quboFS is a classifier-independent Quadratic Unconstrained
   Binary Optimization (QUBO) feature-selection framework that
   jointly optimises gene-level relevance, pairwise non-redundancy
-  and fixed panel size to build compact, low-redundancy candidate
+  and panel size to build compact, low-redundancy candidate
   biomarker panels from single-cell RNA sequencing (scRNA-seq)
-  pseudobulk data. The framework combines cell-type-specific
-  donor-level pseudobulk construction, a pre-specified
-  technical/clonotype gene filter, training-only
-  cohort-consistency-weighted relevance scoring, and QUBO-based
-  subset optimisation. On a four-cohort cerebrospinal-fluid
-  scRNA-seq dataset for multiple sclerosis, quboFS produced the
-  least-redundant panels among evaluated methods while retaining
-  competitive held-out discrimination.
+  pseudobulk data. Relevance is the edgeR statistic weighted by
+  cross-cohort consistency, computed on training donors only, and
+  per-cell-type panels are combined by a cell-type-weighted soft
+  vote. In leak-free nested cross-validation on four public
+  cerebrospinal-fluid scRNA-seq cohorts for multiple sclerosis,
+  and in two blood cohorts, quboFS produced the least-redundant
+  panels among the evaluated methods with comparable held-out
+  discrimination.
 keywords:
   - multiple sclerosis
   - single-cell RNA sequencing
@@ -61,6 +62,7 @@ keywords:
   - cohort-consistency weighting
   - cross-cohort validation
   - leave-one-cohort-out
+  - nested cross-validation
 license: MIT
 preferred-citation:
   type: article
@@ -82,5 +84,6 @@ preferred-citation:
       family-names: Levy
     - given-names: Takahisa
       family-names: Mikami
-  journal: Bioinformatics
+  journal: BMC Bioinformatics
+  status: submitted
   year: 2026

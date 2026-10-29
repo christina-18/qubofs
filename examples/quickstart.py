@@ -64,11 +64,11 @@ def main() -> None:
     data_dir = Path(__file__).resolve().parent / "toy_data"
     pseudobulk, metadata, relevance = load_toy_data(data_dir)
 
+    # Manuscript configuration: every gene with a relevance score is a candidate
+    # (in real data, the genes kept by edgeR::filterByExpr on the training donors).
     pipe = Pipeline(
         K=5,
-        det_thr=0.5,
-        spec_thr=0.5,
-        exclude_vdj=True,
+        candidate_filter="edger_only",
         apply_cohort_consistency=True,
         gamma=0.5,
         lambda_=2.0,

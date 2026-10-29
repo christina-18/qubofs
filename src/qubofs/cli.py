@@ -55,15 +55,20 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("--output", type=Path, required=True, help="Output directory.")
     run.add_argument("--K", type=int, default=10, help="Target panel size per cell type.")
+    run.add_argument("--candidate-filter", default="edger_only", choices=["edger_only", "edger_noIgV_Hb", "celltype"],
+                     help="edger_only (default, manuscript): all genes in the relevance files are candidates; "
+                          "edger_noIgV_Hb: also drop Ig V/J/D and haemoglobin genes; celltype: the v0.1 "
+                          "cell-type-aware filter (options below).")
     run.add_argument("--filter-det", type=float, default=0.7,
-                     help="Stage 1 detection-rate threshold (default 0.7).")
+                     help="celltype filter: detection-rate threshold (default 0.7).")
     run.add_argument("--filter-spec", type=float, default=0.7,
-                     help="Stage 2 cell-type-specificity threshold (default 0.7).")
+                     help="celltype filter: cell-type-specificity threshold (default 0.7).")
     run.add_argument("--no-vdj-exclusion", action="store_true",
-                     help="Disable Stage 3 V(D)J variable-segment exclusion.")
+                     help="celltype filter: disable V(D)J variable-segment exclusion.")
     run.add_argument("--exclude-technical", action="store_true",
-                     help="Enable Stage 0 technical-gene filter (mito/ribosomal/"
-                          "housekeeping/non-coding); recommended on raw pseudobulk.")
+                     help="celltype filter: drop mito/ribosomal/housekeeping/non-coding genes.")
+    run.add_argument("--solver", default="sa", choices=["sa", "exact"],
+                     help="sa (default): simulated annealing; exact: enumeration (<= 20 candidates).")
     run.add_argument("--no-cohort-consistency", action="store_true",
                      help="Disable cohort-consistency weighting of relevance.")
     run.add_argument("--n-prefilter", type=int, default=20,
@@ -122,6 +127,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
     pipe = Pipeline(
         K=args.K,
+        candidate_filter=args.candidate_filter, solver=args.solver,
         det_thr=args.filter_det, spec_thr=args.filter_spec,
         exclude_vdj=not args.no_vdj_exclusion,
         exclude_technical=args.exclude_technical,
@@ -152,6 +158,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
             {
                 "qubofs_version": __version__,
                 "K": args.K,
+                "candidate_filter": args.candidate_filter,
+                "solver": args.solver,
                 "det_thr": args.filter_det,
                 "spec_thr": args.filter_spec,
                 "exclude_vdj": not args.no_vdj_exclusion,
@@ -191,10 +199,9 @@ def _cmd_info(_args: argparse.Namespace) -> int:
     print(
         "\nDefault CLI hyperparameters (one valid setting within the manuscript grid;\n"
         "in the manuscript, gamma and lambda are chosen per cell type by inner CV):\n"
-        "  K=10, det_thr=0.7, spec_thr=0.7, exclude_vdj=True, "
-        "apply_cohort_consistency=True,\n"
+        "  K=10, candidate_filter=edger_only, apply_cohort_consistency=True,\n"
         "  n_prefilter=20, alpha=1.0, gamma=0.5, lambda=2.0, "
-        "sa_reads=30, sa_sweeps=600."
+        "solver=sa, sa_reads=30, sa_sweeps=600."
     )
     return 0
 

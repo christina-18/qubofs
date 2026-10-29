@@ -6,8 +6,8 @@ For cross-cohort biomarker discovery, candidate base relevance scores (such as
 cohorts in which the MS-versus-control direction of differential expression
 agrees with the majority direction. Genes with consistent direction across
 training cohorts retain their full weight, whereas genes with inconsistent
-direction are down-weighted before candidate-pool ranking (the accompanying
-manuscript, §2.4).
+direction are down-weighted before candidate-pool ranking (see Methods of the
+accompanying manuscript).
 """
 from __future__ import annotations
 

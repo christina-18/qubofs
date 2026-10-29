@@ -1,7 +1,15 @@
-"""Cell-type-aware candidate-gene filtering (Stages 1, 2, 3).
+"""Optional candidate-gene filters.
 
-This module implements the three-stage filter described in the accompanying manuscript
-Methods §2.4:
+Manuscript configuration (v0.2): the candidate universe is the set of genes kept by
+``edgeR::filterByExpr`` on the training donors (computed in R, before relevance
+scoring); no further filter is applied. :func:`is_igv_or_hb` defines the gene set
+removed in the Ig V/Hb sensitivity analysis.
+
+:class:`CellTypeFilter` is the cell-type-aware filter of qubofs v0.1 (Stages 1-3
+below). It is kept as an option (``Pipeline(candidate_filter="celltype")``) and is not
+used in the manuscript configuration.
+
+Legacy filter (v0.1 analysis; not used in the present study). Its three stages are:
 
 * **Stage 1 — detection rate**: retain genes detected (pseudobulk expression > 0)
   in at least ``det_thr`` fraction of training donors of the target cell type.
@@ -45,6 +53,24 @@ VDJ_VJ_PREFIXES: tuple[str, ...] = (
 )
 
 
+_HAEMOGLOBIN = frozenset({"HBA1", "HBA2", "HBB", "HBD", "HBE1", "HBG1", "HBG2", "HBM", "HBQ1", "HBZ"})
+
+
+def is_igv_or_hb(gene: str) -> bool:
+    """Return ``True`` for immunoglobulin V/J segments (``^IG[HKL][VJ]``), IGHD
+    diversity segments (``^IGHD<digit>``) or haemoglobin genes.
+
+    This is the exclusion set of the manuscript's Ig V/Hb sensitivity analysis.
+
+    Examples
+    --------
+    >>> is_igv_or_hb("IGKV3-20"), is_igv_or_hb("HBB"), is_igv_or_hb("IGHG1")
+    (True, True, False)
+    """
+    g = str(gene)
+    return bool(re.match(r"^IG[HKL][VJ]", g) or _IGHD_DIVERSITY.match(g)) or g in _HAEMOGLOBIN
+
+
 def is_vdj_segment(gene: str) -> bool:
     """Return ``True`` if ``gene`` is a V or J segment of an immunoglobulin or TCR
     locus, or an immunoglobulin heavy-chain diversity (D) segment.
@@ -72,13 +98,13 @@ def is_vdj_segment(gene: str) -> bool:
     return False
 
 
-# Pre-selection technical-gene pattern (manuscript primary configuration):
+# Pre-selection technical-gene pattern (legacy v0.1 analysis; not used in the present study):
 # mitochondrial, ribosomal-protein (incl. RPLP0/1/2 stalk and RPSA), cytosolic
 # heat-shock, classical housekeeping, dominant nuclear lncRNA / X-inactivation,
 # uncharacterised clone-named loci and small/non-coding RNAs. These dominate
 # technical rather than disease-specific variation and would otherwise occupy the
 # limited panel slots. Aligned with current best practice (Heumos et al. 2023;
-# Luecken & Theis 2019). Mirrors HK_PATTERN in scripts/03_selection/qubo_pipeline.py.
+# Luecken & Theis 2019).
 _TECHNICAL_GENE = re.compile(
     r"^(MT-|MTRNR|MTATP|MTND|"
     r"RPL[0-9]|RPLP|RPS[0-9]|RPSA|MRPL|MRPS|"
@@ -140,9 +166,9 @@ class CellTypeFilter:
         Stage 0 (pre-selection technical filter): drop mitochondrial, ribosomal-
         protein, cytosolic heat-shock, classical housekeeping, dominant nuclear
         lncRNA, uncharacterised clone-named and small/non-coding-RNA genes (see
-        :func:`is_technical_gene`). Off by default to preserve prior behaviour;
-        the manuscript pipeline applies this filter, and it is recommended when
-        running on raw pseudobulk so technical genes do not crowd the panel.
+        :func:`is_technical_gene`). Off by default. Used by the legacy v0.1 analysis;
+        not used in the present study, whose candidate universe is
+        ``edgeR::filterByExpr`` on the training donors.
 
     Attributes
     ----------
@@ -223,7 +249,7 @@ class CellTypeFilter:
         other = row.drop(target_cell_type)
         # When the target is the only cell type (or no other cell type expresses
         # the gene), specificity cannot be assessed: the gene passes Stage 2.
-        # (Matches the float("inf") convention in scripts/03_selection.)
+        # (float("inf") convention of the v0.1 analysis scripts.)
         if other.empty:
             return True
         other_max = float(other.max())

@@ -1,21 +1,21 @@
 """End-to-end QUBO feature-selection :class:`Pipeline` for scRNA-seq pseudobulk.
 
-Note: this lightweight package pipeline performs **feature selection only**. The
-full leave-one-cohort-out classifier benchmark reported in the manuscript
-(Table 2, Figures 2-4) is implemented in ``scripts/`` and is not reproduced by
-running ``Pipeline`` alone.
+Note: this lightweight package pipeline performs **feature selection only** for one
+training set. The nested cross-validation benchmark reported in the manuscript
+(classifiers, cell-type-weighted soft voting, inner-CV choice of lambda and gamma) is
+implemented in ``scripts/`` and is not reproduced by running ``Pipeline`` alone.
 
-Combines :class:`~qubofs.filter.CellTypeFilter`,
-:class:`~qubofs.relevance.CohortConsistency` and
-:class:`~qubofs.qubo.QUBOSelector` into a single sklearn-style estimator that
-selects per-cell-type gene panels from per-cell-type pseudobulk profiles, a
-donor metadata table, and per-gene pooled relevance scores.
+Combines :class:`~qubofs.relevance.CohortConsistency` and
+:class:`~qubofs.qubo.QUBOSelector` (optionally preceded by a candidate filter) into a
+single sklearn-style estimator that selects per-cell-type gene panels from
+per-cell-type pseudobulk profiles, a donor metadata table, and per-gene base relevance
+scores (absolute edgeR statistics on the training donors, for the genes kept by
+``edgeR::filterByExpr``).
 
 Example
 -------
 >>> from qubofs import Pipeline
->>> pipe = Pipeline(K=10, det_thr=0.7, spec_thr=0.7, exclude_vdj=True,
-...                 gamma=0.5, lambda_=2.0)
+>>> pipe = Pipeline(K=10, gamma=0.5, lambda_=2.0)
 >>> pipe.fit(
 ...     pseudobulk_per_celltype={"B": pb_b, "Mono": pb_mono, ...},
 ...     meta=donor_meta,
@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-from qubofs.filter import CellTypeFilter
+from qubofs.filter import CellTypeFilter, is_igv_or_hb
 from qubofs.qubo import QUBOSelector
 from qubofs.relevance import CohortConsistency
 
@@ -43,17 +43,16 @@ class Pipeline:
     Parameters
     ----------
     K : int, default 10
-        Target panel size per cell type.
-    det_thr : float, default 0.7
-        Stage 1 detection-rate threshold.
-    spec_thr : float, default 0.7
-        Stage 2 cell-type-specificity threshold.
-    exclude_vdj : bool, default True
-        Stage 3: exclude immunoglobulin / TCR V(D)J variable & joining segments.
-    exclude_technical : bool, default False
-        Stage 0: drop mitochondrial / ribosomal / housekeeping / non-coding
-        technical genes before selection (recommended on raw pseudobulk; the
-        manuscript pipeline applies this). See :func:`qubofs.filter.is_technical_gene`.
+        Target panel size per cell type (soft constraint: the optimum can have fewer genes).
+    candidate_filter : {"edger_only", "edger_noIgV_Hb", "celltype"}, default "edger_only"
+        "edger_only" (manuscript): every gene with a relevance score is a candidate
+        (pass the genes kept by ``edgeR::filterByExpr`` on the training donors).
+        "edger_noIgV_Hb" (sensitivity): also drop Ig V/J/D segments and haemoglobin
+        genes (:func:`qubofs.filter.is_igv_or_hb`). "celltype": the v0.1 cell-type-aware
+        filter (:class:`~qubofs.filter.CellTypeFilter`) with the four options below.
+    det_thr, spec_thr, exclude_vdj, exclude_technical
+        Options of the "celltype" filter only (detection-rate and specificity
+        thresholds, V(D)J segment and technical-gene exclusion).
     apply_cohort_consistency : bool, default True
         Weight per-gene relevance by cohort-consistency score before SA.
     n_prefilter : int, default 20
@@ -64,6 +63,8 @@ class Pipeline:
         QUBO term coefficients.
     sa_reads : int, default 30
     sa_sweeps : int, default 600
+    solver : {"sa", "exact"}, default "sa"
+        Simulated annealing (manuscript) or exact enumeration (sensitivity; <= 20 candidates).
     seed : int or None
         RNG seed.
     donor_col, diagnosis_col, cohort_col : str
@@ -85,6 +86,7 @@ class Pipeline:
     """
 
     K: int = 10
+    candidate_filter: str = "edger_only"
     det_thr: float = 0.7
     spec_thr: float = 0.7
     exclude_vdj: bool = True
@@ -96,6 +98,7 @@ class Pipeline:
     lambda_: float = 2.0
     sa_reads: int = 30
     sa_sweeps: int = 600
+    solver: str = "sa"
     seed: int | None = 42
     donor_col: str = "donor_id"
     diagnosis_col: str = "diagnosis"
@@ -125,8 +128,17 @@ class Pipeline:
         meta : DataFrame
             Donor metadata (donor_id, diagnosis, cohort).
         relevance_per_celltype : dict[str, Series]
-            Cell-type -> per-gene base relevance score, such as an absolute
-            Wald statistic (Series indexed by gene).
+            Cell-type -> per-gene base relevance score, larger = more relevant
+            (Series indexed by gene). The manuscript uses the absolute edgeR
+            quasi-likelihood statistic |sign(logFC)·sqrt(F)|.
+
+        Notes
+        -----
+        The pipeline does not separate training and validation data itself. Both
+        the pseudobulk matrices and the relevance scores must be computed from
+        training donors only. The genes in each relevance Series define the
+        candidate universe (``candidate_filter="edger_only"``); to match the manuscript,
+        pass only the genes kept by ``edgeR::filterByExpr`` on the training donors.
 
         Returns
         -------
@@ -138,10 +150,12 @@ class Pipeline:
                 "pre-filter leaves fewer than K candidates and drops every cell type."
             )
 
+        if self.candidate_filter not in ("edger_only", "edger_noIgV_Hb", "celltype"):
+            raise ValueError(f"unknown candidate_filter {self.candidate_filter!r}")
         self._filter = CellTypeFilter(
             det_thr=self.det_thr, spec_thr=self.spec_thr,
             exclude_vdj=self.exclude_vdj, exclude_technical=self.exclude_technical,
-        ).fit(pseudobulk_per_celltype)
+        ).fit(pseudobulk_per_celltype) if self.candidate_filter == "celltype" else None
 
         self.selected_panels_ = {}
         self.selector_energy_ = {}
@@ -153,8 +167,13 @@ class Pipeline:
             if rel is None or rel.empty:
                 self.skipped_[ct] = "no relevance scores provided"
                 continue
-            # Stage 1+2+3 filter on the gene index
-            keep = [g for g in rel.index if self._filter.passes(g, ct)]
+            # candidate universe
+            if self.candidate_filter == "celltype":
+                keep = [g for g in rel.index if self._filter.passes(g, ct)]
+            elif self.candidate_filter == "edger_noIgV_Hb":
+                keep = [g for g in rel.index if not is_igv_or_hb(g)]
+            else:
+                keep = list(rel.index)
             if len(keep) < self.K:
                 self.skipped_[ct] = f"only {len(keep)} genes passed the filter (< K={self.K})"
                 continue
@@ -189,7 +208,7 @@ class Pipeline:
                 K=self.K,
                 alpha=self.alpha, gamma=self.gamma, lambda_=self.lambda_,
                 sa_reads=self.sa_reads, sa_sweeps=self.sa_sweeps,
-                seed=self.seed,
+                seed=self.seed, solver=self.solver,
             ).fit_select(r_vec, R)
             self.selected_panels_[ct] = [cands[i] for i in selector.selected_indices_]
             self.selector_energy_[ct] = float(selector.energy_)
