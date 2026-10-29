@@ -131,7 +131,7 @@ qubofs/
 ## Citation
 
 Please cite the manuscript and the software (`CITATION.cff`). Software releases are
-archived on Zenodo (v0.1.4: https://doi.org/10.5281/zenodo.21133701). Maintained by the
+archived on Zenodo (all versions: https://doi.org/10.5281/zenodo.20851198; v0.1.4: https://doi.org/10.5281/zenodo.21133701). Maintained by the
 corresponding author, M. Asada.
 
 ## Licence

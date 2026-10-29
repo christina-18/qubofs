@@ -6,9 +6,9 @@ message: >-
   If you use this software, please cite using the metadata below.
 type: software
 version: 0.2.0
-# doi: add the Zenodo DOI of the v0.2.0 release once it is archived
-#      (10.5281/zenodo.21133701 is the v0.1.4 archive).
-date-released: "2026-10-22"
+# Zenodo concept DOI (resolves to the latest archived version; all versions listed there)
+doi: 10.5281/zenodo.20851198
+date-released: "2026-10-29"
 authors:
   - given-names: Mizuho
     family-names: Asada
